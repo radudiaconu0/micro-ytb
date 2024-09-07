@@ -30,6 +30,9 @@ return [
         'middleware' => [
             // Ensures the request is not vulnerable to cross-site request forgery.
             // Nuwave\Lighthouse\Http\Middleware\EnsureXHR::class,
+            \Nuwave\Lighthouse\Http\Middleware\AttemptAuthentication::class,
+
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
 
             // Always set the `Accept: application/json` header.
             Nuwave\Lighthouse\Http\Middleware\AcceptJson::class,
@@ -61,7 +64,7 @@ return [
     |
     */
 
-    'guards' => null,
+    'guards' => ['sanctum'],
 
     /*
     |--------------------------------------------------------------------------
@@ -184,7 +187,7 @@ return [
     'security' => [
         'max_query_complexity' => GraphQL\Validator\Rules\QueryComplexity::DISABLED,
         'max_query_depth' => GraphQL\Validator\Rules\QueryDepth::DISABLED,
-        'disable_introspection' => (bool) env('LIGHTHOUSE_SECURITY_DISABLE_INTROSPECTION', false)
+        'disable_introspection' => (bool)env('LIGHTHOUSE_SECURITY_DISABLE_INTROSPECTION', false)
             ? GraphQL\Validator\Rules\DisableIntrospection::ENABLED
             : GraphQL\Validator\Rules\DisableIntrospection::DISABLED,
     ],
