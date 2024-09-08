@@ -32,8 +32,6 @@ return [
             // Nuwave\Lighthouse\Http\Middleware\EnsureXHR::class,
             \Nuwave\Lighthouse\Http\Middleware\AttemptAuthentication::class,
 
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-
             // Always set the `Accept: application/json` header.
             Nuwave\Lighthouse\Http\Middleware\AcceptJson::class,
 
@@ -64,7 +62,7 @@ return [
     |
     */
 
-    'guards' => ['sanctum'],
+    'guards' => ['api'],
 
     /*
     |--------------------------------------------------------------------------
