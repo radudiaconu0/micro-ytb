@@ -10,3 +10,7 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return Inertia::render('Login');
 })->middleware(['guest']);
+
+Route::get('/register', function () {
+    return Inertia::render('Register');
+})->middleware(['guest']);

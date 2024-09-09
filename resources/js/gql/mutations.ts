@@ -11,8 +11,8 @@ export const LOGIN_MUTATION = gql`
 `
 
 export const REGISTER_MUTATION = gql`
-    mutation Register($name: String!, $email: String!, $password: String!) {
-        register(name: $name, email: $email, password: $password) {
+    mutation Register($name: String!, $email: String!, $password: String!, $password_confirmation: String!) {
+        register(name: $name, email: $email, password: $password, password_confirmation: $password_confirmation) {
             access_token
             expires_in
             token_type

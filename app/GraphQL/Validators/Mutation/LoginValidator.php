@@ -1,6 +1,6 @@
 <?php
 
-namespace App\GraphQL\Validators;
+namespace App\GraphQL\Validators\Mutation;
 
 use Nuwave\Lighthouse\Validation\Validator;
 

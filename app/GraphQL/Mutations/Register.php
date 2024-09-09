@@ -11,10 +11,12 @@ class Register
         $user->email = $args['email'];
         $user->password = bcrypt($args['password']);
         $user->save();
+        $creds = [
+            'email' => $args['email'],
+            'password' => $args['password']
+        ];
+        $token = auth()->attempt($creds);
 
-        if (!$token = auth()->attempt($args)) {
-            throw new \GraphQL\Error\Error('Credentials are invalid.');
-        }
 
         return $this->respondWithToken($token);
     }
