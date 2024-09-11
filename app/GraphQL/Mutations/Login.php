@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use GraphQL\Error\Error;
 use Nette\Schema\ValidationException;
+use function Pest\Laravel\withCookie;
 
 class Login
 {

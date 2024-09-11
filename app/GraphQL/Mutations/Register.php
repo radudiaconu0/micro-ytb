@@ -6,6 +6,7 @@ class Register
 {
     public function __invoke($_, array $args)
     {
+        \Log::info($args);
         $user = new \App\Models\User();
         $user->name = $args['name'];
         $user->email = $args['email'];

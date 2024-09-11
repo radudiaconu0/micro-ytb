@@ -9,13 +9,16 @@ return new class extends Migration {
     {
         Schema::create('videos', function (Blueprint $table) {
             $table->id();
-            $table->string('file_path');
+            $table->string('video_code');
+            $table->string('video_file_path');
             $table->string('title');
             $table->string('description');
-            $table->string('thumbnail_path')->nullable();
+            $table->string('thumbnail_image_path')->nullable();
+            $table->enum('watermark_type', ['text', 'image'])->nullable();
+            $table->string('watermark_text')->nullable();
             $table->string('watermark_path')->nullable();
-            $table->integer('duration');
-            $table->enum('status', ['processing', 'processed', 'failed']);
+            $table->enum('watermark_position', ['top-left', 'top-right', 'bottom-left', 'bottom-right'])->nullable();
+            $table->enum('status', ['processing', 'processed', 'failed'])->default('processing');
             $table->unsignedBigInteger('user_id');
             $table->json('metadata');
             $table->timestamps();

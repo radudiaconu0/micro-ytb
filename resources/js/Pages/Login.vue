@@ -2,13 +2,14 @@
 import {ref} from 'vue'
 import {useMutation} from '@vue/apollo-composable'
 import {LOGIN_MUTATION} from '@/gql/mutations'
-import {useCookies} from '@vueuse/integrations/useCookies'
-import { router } from '@inertiajs/vue3'
+import {useRouter} from "vue-router";
+import {useCookies} from "@vueuse/integrations/useCookies";
+
 const email = ref('')
 const password = ref('')
 
 const {mutate: login, onDone, onError, loading} = useMutation(LOGIN_MUTATION)
-
+const router = useRouter()
 const handleSubmit = () => {
     login({
         email: email.value,
@@ -18,9 +19,9 @@ const handleSubmit = () => {
 
 onDone((data) => {
     console.log(data.data)
-    const cookies = useCookies(['access_token'])
-    cookies.set('access_token', data.data.login.access_token)
-    router.visit('/')
+    let cookie = useCookies(['access_token'])
+    cookie.set('access_token', data.data.login.access_token)
+    router.push('/')
 })
 onError((error) => {
     console.log(error)

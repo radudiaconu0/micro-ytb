@@ -19,3 +19,9 @@ export const REGISTER_MUTATION = gql`
         }
     }
 `
+
+export const LOGOUT_MUTATION = gql`
+    mutation Logout {
+        message
+    }
+`

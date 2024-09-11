@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import {Link} from '@inertiajs/vue3'
-import {ref, watch} from "vue";
-import {useQuery} from "@vue/apollo-composable";
-import gql from "graphql-tag";
-import {ME} from "@/gql/queries";
+import {useAuthStore} from "@/stores/authStore";
+import {onMounted, ref} from "vue";
+const user = useAuthStore().user;
 
-const {result, loading, onResult} = useQuery(ME)
-
-watch(result, (newVal) => {
-    console.log(newVal.me)
-})
 </script>
 
 <template>
@@ -34,17 +27,17 @@ watch(result, (newVal) => {
             <div class="hidden w-full md:block md:w-auto" id="navbar-default">
                 <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
                     <li>
-                        <Link href="#"
+                        <router-link to="/"
                               class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500"
                               aria-current="page"> Home
-                        </Link>
+                        </router-link>
 
                     </li>
                     <li>
-                        <Link href="#" v-if="loading == false && result.me"
+                        <router-link to="/" v-if="user"
                               class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500"
-                              aria-current="page"> {{ result.me.name }}
-                        </Link>
+                              aria-current="page"> {{ user.name }}
+                        </router-link>
                     </li>
 
                 </ul>
