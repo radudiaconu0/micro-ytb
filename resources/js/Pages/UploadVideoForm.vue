@@ -12,11 +12,11 @@ const form = ref({
     description: '',
     video: null,
     thumbnail: null,
-    watermark: null,
     frameSelector: 0,
     watermarkType: 'image',
     watermarkText: '',
-    watermarkPosition: 'bottom-right'
+    watermarkPosition: 'bottom-right',
+    watermarkImage: null,
 })
 
 const videoSrc = ref(null)
@@ -49,13 +49,14 @@ const handleSubmit = async () => {
     const formData = new FormData()
     formData.append('title', form.value.title)
     formData.append('description', form.value.description)
-    formData.append('video', form.value.video)
-    formData.append('thumbnail', form.value.thumbnail)
+    formData.append('video_file', form.value.video)
+    if (form.value.thumbnailOption === 'custom') {
+        formData.append('thumbnail_image', form.value.thumbnail)
+    }
     formData.append('watermark', form.value.watermark)
-    formData.append('thumbnail_option', form.value.thumbnailOption)
-    formData.append('frame_selector', form.value.frameSelector)
     formData.append('watermark_type', form.value.watermarkType)
     formData.append('watermark_text', form.value.watermarkText)
+    formData.append('watermark_image', form.value.watermarkImage)
     formData.append('watermark_position', form.value.watermarkPosition)
     let cookies = useCookies(['access_token'])
     try {
@@ -71,6 +72,14 @@ const handleSubmit = async () => {
     finally {
         loading.value = false
     }
+}
+
+const handleThumbnailUpload = (e) => {
+    form.value.thumbnail = e.target.files[0]
+}
+
+const handleWatermarkUpload = (e) => {
+    form.value.watermarkImage = e.target.files[0]
 }
 </script>
 

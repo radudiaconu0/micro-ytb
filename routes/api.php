@@ -8,4 +8,4 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:api');
 
-Route::post('/stores-video', [VideoController::class, 'store']);
+Route::post('/store-video', [VideoController::class, 'store']);

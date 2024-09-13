@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
+import router from "@/router";
 
 const LOGIN_MUTATION = gql`
     mutation login($email: String!, $password: String!) {
@@ -78,11 +79,10 @@ export const useAuthStore = defineStore('auth', () => {
                 user.value = data.me
                 isAuthenticated.value = true
             } else {
-                throw new Error('Failed to fetch user')
+                await router.push('/login')
             }
         } catch (error) {
-            console.error('Fetch user error:', error)
-            throw error
+            await router.push('/login')
         }
     }
 
