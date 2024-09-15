@@ -12,10 +12,10 @@ class VideoRequest extends FormRequest
             'video_file' => 'required|mimetypes:video/mp4,video/avi,video/mpeg,video/quicktime',
             'title' => 'required|string',
             'description' => 'required|string',
-            'thumbnail_image' => 'nullable|image',
+            'thumbnail_image' => 'nullable',
             'watermark_type' => 'nullable|in:text,image',
             'watermark_text' => 'nullable|string|required_if:watermark_type,text',
-            'watermark_image' => 'nullable|image|required_if:watermark_type,image',
+            'watermark_image' => 'nullable|required_if:watermark_type,image',
         ];
     }
 

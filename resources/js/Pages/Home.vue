@@ -1,30 +1,40 @@
 <script setup lang="ts">
-import {onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import NavBar from "@/Components/NavBar.vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
+import gql from "graphql-tag";
+import {useQuery} from "@vue/apollo-composable";
+const videos = ref([]);
+const VIDEO_QUERY = gql`
+   query GetVideos($first: Int!, $page: Int) {
+    feedVideos(first: $first, page: $page) {
+            data {
+            title,
+            }
+
+        }
+    }
+`;
+
+const {data, loading, error, onResult, onError} = useQuery(VIDEO_QUERY, {
+    first: 10,
+    page: 1
+})
 
 onMounted(() => {
-    console.log('Home page mounted');
-    // get access_token from cookie
-    // if access_token is not available, redirect to login page
-
-
-    // if access_token is available, redirect to dashboard page
-
-    let token = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='));
-    if (token) {
-        token = token.split('=')[1];
-        console.log(token);
-    }
-    else {
-        console.log('No token found');
-    }
+    onResult((result) => {
+        console.log(result);
+    });
+    onError((error) => {
+        console.error(error);
+    });
 });
+
 </script>
 
 <template>
 <GuestLayout>
-    Landing Page
+
 </GuestLayout>
 </template>
 

@@ -27,8 +27,7 @@ const onFrameSelectorChange = () => {
     const video = videoFile.value
     const canvas = currentFrame.value
     const ctx = canvas.getContext('2d')
-    const frame = (form.value.frameSelector / 100) * video.duration
-    video.currentTime = frame
+    video.currentTime = (form.value.frameSelector / 100) * video.duration
     video.addEventListener('seeked', () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     })

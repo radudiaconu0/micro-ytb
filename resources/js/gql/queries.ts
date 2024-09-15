@@ -9,3 +9,22 @@ export const ME = gql`
         }
     }
 `;
+
+
+export const VIDEO_FEED = gql`
+    query VideoFeed {
+        videoFeed {
+            id
+            title
+            description
+            videoUrl
+            thumbnailUrl
+            createdAt
+            updatedAt
+            user {
+                id
+                name
+            }
+        }
+    }
+`;
