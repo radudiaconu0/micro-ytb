@@ -50,7 +50,7 @@ class Video extends Model
             'status' => $this->status,
             'metadata' => $this->metadata,
             'user' => $this->user->apiObject(),
-            'thumbnails' => $this->thumbnails->map->apiObject(),
+            'thumbnails' => $this->thumbnails->map(fn (VideoThumbnail $thumbnail) => $thumbnail->apiObject()),
             'created_at' => $this->created_at->toDateTimeString(),
             'updated_at' => $this->updated_at->toDateTimeString(),
         ];

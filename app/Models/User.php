@@ -74,4 +74,12 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Video::class);
     }
+
+    public function apiObject()
+    {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+        ];
+    }
 }

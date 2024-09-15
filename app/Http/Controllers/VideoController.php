@@ -71,10 +71,56 @@ class VideoController extends Controller
         $video->original_s3_key = $s3Key;
         $video->status = 'processing';
         $video->save();
+        $this->generateThumbnails($video, $request->file('thumbnail_image'));
 
         ProcessVideoJob::dispatch($video);
         return response()->json([
             'success' => true,
         ]);
+    }
+
+    public function generateThumbnails($video, $thumbnailFile)
+    {
+        $fileName = Str::uuid()->toString() . '_' . time();
+        $image = Image::read($thumbnailFile);
+
+        $qualities = [
+            'small' => ['width' => 1280, 'quality' => 80],
+            'medium' => ['width' => 640, 'quality' => 60],
+            'large' => ['width' => 320, 'quality' => 40],
+        ];
+
+
+        foreach ($qualities as $quality => $specs) {
+            $height = round(($specs['width'] / $image->width()) * $image->height());
+
+            $resized = $image->scale($specs['width'], $height);
+
+            $thumbnailFilename = "{$fileName}_{$quality}.jpg";
+
+
+            Storage::disk('s3')->put(
+                "thumbnails/{$thumbnailFilename}",
+                $resized->toJpeg($specs['quality'])->toFilePointer()
+            );
+
+            VideoThumbnail::create([
+                'video_id' => $video->id,
+                's3_key' => $thumbnailFilename,
+                'size' => $quality,
+                'height' => $height,
+                'width' => $specs['width'],
+            ]);
+        }
+    }
+
+    public function getVideos()
+    {
+        $videos = Video::paginate(10);
+        $videos->getCollection()->transform(function ($video) {
+            return $video->apiObject();
+        });
+
+        return $videos;
     }
 }

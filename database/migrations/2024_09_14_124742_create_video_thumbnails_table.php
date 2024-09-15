@@ -20,8 +20,6 @@ return new class extends Migration {
                 ->references('id')
                 ->on('videos')
                 ->onDelete('cascade');
-
-            $table->unique(['video_id', 'size']);
         });
     }
 

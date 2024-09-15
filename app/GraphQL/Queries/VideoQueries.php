@@ -10,10 +10,25 @@ use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
 class VideoQueries
 {
-    public function feedVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): array|LengthAwarePaginator|_IH_Video_C
+    public function feedVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): array
     {
-        return Video::latest()
+        $videos = Video::with('user', 'thumbnails')
+            ->latest()
             ->paginate($args['first'], ['*'], 'page', $args['page'] ?? 1);
+        $videos->getCollection()->transform(function (Video $video) {
+            return $video->apiObject();
+        });
+
+        return [
+            'data' => $videos->items(),  // Items (video data) from pagination
+            'paginatorInfo' => [
+                'total' => $videos->total(),
+                'count' => $videos->count(),
+                'perPage' => $videos->perPage(),
+                'currentPage' => $videos->currentPage(),
+                'lastPage' => $videos->lastPage(),
+            ],
+        ];
     }
 
     public function myVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
