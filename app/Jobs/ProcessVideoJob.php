@@ -160,7 +160,7 @@ class ProcessVideoJob implements ShouldQueue
         $videoAspectRatio = $videoWidth / $videoHeight;
         $baseScaleFactor = $this->getBaseScaleFactor($videoAspectRatio);
 
-        $fontSize = max(12, round($videoWidth * $baseScaleFactor / 20));
+        $fontSize = max(16, round($videoWidth * $baseScaleFactor / 20));
 
         $padding = max(10, round($videoWidth * 0.01));
 
