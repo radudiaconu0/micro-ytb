@@ -40,4 +40,24 @@ class VideoQueries
             ->paginate($args['first'], ['*'], 'page', $args['page'] ?? 1);
     }
 
+    public function searchVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
+    {
+        $videos = Video::search($args['query'])
+            ->paginate(10);
+
+        $videos->getCollection()->transform(function (Video $video) {
+            return $video->apiObject();
+        });
+
+        return [
+            'data' => $videos->items(),
+            'paginatorInfo' => [
+                'total' => $videos->total(),
+                'count' => $videos->count(),
+                'perPage' => $videos->perPage(),
+                'currentPage' => $videos->currentPage(),
+                'lastPage' => $videos->lastPage(),
+            ],
+        ];
+    }
 }

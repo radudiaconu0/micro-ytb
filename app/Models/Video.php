@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Video extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Searchable;
 
     protected $fillable = [
         'video_code',
@@ -50,9 +51,23 @@ class Video extends Model
             'status' => $this->status,
             'metadata' => $this->metadata,
             'user' => $this->user->apiObject(),
-            'thumbnails' => $this->thumbnails->map(fn (VideoThumbnail $thumbnail) => $thumbnail->apiObject()),
+            'thumbnails' => $this->thumbnails->map(fn(VideoThumbnail $thumbnail) => $thumbnail->apiObject()),
             'created_at' => $this->created_at->toDateTimeString(),
             'updated_at' => $this->updated_at->toDateTimeString(),
         ];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->getKey(),
+            'title' => $this->title,
+            'description' => $this->description,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === 'processed';
     }
 }
