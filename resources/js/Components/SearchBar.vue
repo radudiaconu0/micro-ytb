@@ -2,6 +2,7 @@
 import {useQuery} from "@vue/apollo-composable";
 import {ref} from "vue";
 import gql from "graphql-tag";
+import GuestLayout from "@/Layouts/GuestLayout.vue";
 
 const search = ref('');
 const videos = ref([]);
@@ -35,7 +36,6 @@ const searchVideos = () => {
 </script>
 
 <template>
-    <!--     searchbar with autocomplete-->
     <div class="relative">
         <input type="text" v-model="search" @input="searchVideos"
                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"/>
@@ -45,10 +45,10 @@ const searchVideos = () => {
                 <div class="flex flex-col gap-4">
                     <div v-for="video in videos" :key="video.url"
                          class="bg-white dark:bg-zinc-900 rounded-lg shadow-lg overflow-hidden">
-                        <div class="relative pb-9/16">
+
                             <img :src="video.thumbnails[2].thumbnail_url" alt="Video thumbnail"
                                  class="absolute inset-0 w-full h-full object-cover"/>
-                        </div>
+
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-white">{{ video.title }}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ video.description }}</p>
