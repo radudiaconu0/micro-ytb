@@ -14,6 +14,7 @@ const routes = [
     {path: '/video-upload', component: () => import('@/Pages/UploadVideoForm.vue'), meta: {auth: 'auth'}},
     {path: '/register', component: () => import('@/Pages/Register.vue'), meta: {auth: 'guest'}},
     {path: '/results', component: () => import('@/Pages/SearchResults.vue')},
+    {path: '/watch', component: () => import('@/Pages/Video.vue')},
 ]
 
 const router = createRouter({

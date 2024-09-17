@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\Searchable;
 
 class Video extends Model
@@ -45,7 +46,7 @@ class Video extends Model
     {
         return [
             'video_code' => $this->video_code,
-            'url' => \Storage::url('videos/processed/' . $this->processed_s3_key),
+            'url' => Storage::disk('s3')->temporaryUrl('videos/processed/' . $this->processed_s3_key, now()->addMinutes(5)),
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status,

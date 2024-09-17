@@ -60,4 +60,9 @@ class VideoQueries
             ],
         ];
     }
+
+    public function fetchVideo($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
+    {
+        return Video::whereVideoCode($args['video_code'])->firstOrFail()->apiObject();
+    }
 }

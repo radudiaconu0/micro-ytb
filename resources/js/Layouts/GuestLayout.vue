@@ -3,7 +3,7 @@
         <NavBar/>
 
         <!-- Page Content -->
-        <main class="flex-grow">
+        <main class="flex-grow dark:bg-zinc-900">
             <slot/>
         </main>
     </div>
