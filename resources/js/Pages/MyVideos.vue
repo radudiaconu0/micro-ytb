@@ -1,9 +1,10 @@
 <script setup>
-import {useQuery, useMutation, useLazyQuery} from '@vue/apollo-composable';
-import {computed, onMounted, ref} from 'vue';
+import {useLazyQuery} from '@vue/apollo-composable';
+import {onMounted, ref} from 'vue';
 import gql from 'graphql-tag';
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import {useRouter} from "vue-router";
+
 const router = useRouter();
 const GET_VIDEOS = gql`
   query GetVideos($page: Int!, $perPage: Int!) {
