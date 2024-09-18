@@ -15,6 +15,8 @@ const routes = [
     {path: '/register', component: () => import('@/Pages/Register.vue'), meta: {auth: 'guest'}},
     {path: '/results', component: () => import('@/Pages/SearchResults.vue')},
     {path: '/watch', component: () => import('@/Pages/Video.vue')},
+    {path: '/my-videos', component: () => import('@/Pages/MyVideos.vue'), meta: {auth: 'auth'}},
+    {path: '/video/:code/edit', component: () => import('@/Pages/MyVideos.vue'), meta: {auth: 'auth'}}
 ]
 
 const router = createRouter({

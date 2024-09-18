@@ -29,6 +29,7 @@ const SEARCH_VIDEO_QUERY = gql`
     query SearchVideos($search: String!) {
         searchVideos(first: 10, page: 1, query: $search) {
             data {
+            video_code,
                 url
                 title,
                 description,
@@ -59,7 +60,7 @@ const search = async () => {
 };
 
 const selectResult = (result) => {
-    router.push(`/results?search_query=${result.title}`);
+    router.push(`/watch?v=${result.video_code}`);
 };
 </script>
 

@@ -7,6 +7,7 @@ use App\Jobs\ProcessVideoJob;
 use App\Models\Video;
 use App\Models\VideoThumbnail;
 use FFMpeg\FFProbe;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Laravel\Facades\Image;
@@ -114,13 +115,46 @@ class VideoController extends Controller
         }
     }
 
-    public function getVideos()
+    public function updateVideo(Request $request)
     {
-        $videos = Video::paginate(10);
-        $videos->getCollection()->transform(function ($video) {
-            return $video->apiObject();
-        });
+        \Validator::make(
+            $request->all(),
+            [
+                'video_code' => 'required|exists:videos,video_code',
+                'title' => 'required',
+                'description' => 'required',
+                'thumbnail_image' => 'image',
+            ]
+        )->validate();
+        $video = Video::whereVideoCode($request->video_code)->firstOrFail();
+        $video->description = $request->description;
+        $video->title = $request->title;
+        if ($request->has('thumbnail_image')) {
+            $thumbnails = $video->thumbnails;
+            foreach ($thumbnails as $thumbnail) {
+                Storage::disk('s3')->delete('thumbnails/' . $thumbnail->s3_key);
+                $thumbnail->delete();
+            }
+            $this->generateThumbnails($video, $request->file('thumbnail_image'));
+        }
+        $video->save();
+        return response()->json([
+            'success' => true,
+        ]);
+    }
 
-        return $videos;
+    public function fetchVideo($videoCode)
+    {
+        $video = Video::whereVideoCode($videoCode)->first();
+        if (!$video) {
+            return response()->json([
+                'success' => false
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $video->apiObject(),
+            'success' => false
+        ]);
     }
 }
