@@ -62,6 +62,10 @@ const search = async () => {
 const selectResult = (result) => {
     router.push(`/watch?v=${result.video_code}`);
 };
+
+const goToSearchResults = () => {
+    router.push(`/results?search_query=${searchQuery.value}`);
+};
 </script>
 
 <template>
@@ -90,12 +94,13 @@ const selectResult = (result) => {
                                 @input="search"
                                 v-model="searchQuery"
                                 @focus="showResults = true"
-                                @blur="hideResultsDelayed"
+                                @blur="hideResults"
+                                @keyup.enter="goToSearchResults"
                                 type="text"
                                 class="block w-full bg-[#121212] border border-[#303030] rounded-l-full py-2 pl-4 pr-10 text-sm placeholder-gray-400 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:placeholder-gray-500"
                                 placeholder="Search"
                             />
-                            <button
+                            <button @click="goToSearchResults"
                                 class="absolute inset-y-0 right-0 flex items-center justify-center px-4 bg-[#222222] rounded-r-full border border-[#303030] border-l-0 hover:bg-[#3f3f3f] focus:outline-none">
                                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
                                      viewBox="0 0 20 20" fill="currentColor">

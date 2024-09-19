@@ -11,6 +11,7 @@ const GET_VIDEOS = gql`
     myVideos(page: $page, first: $perPage) {
      data {
          title
+         video_code
          description
          status
          created_at
@@ -115,7 +116,7 @@ onMounted(async () => {
                         <td class="py-2 px-4 border-b dark:border-gray-500">
                             <button @click="editVideo(video.video_code)"
                                     class="bg-blue-500 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-800 text-white font-bold py-1 px-2 rounded transition duration-300">
-                                Watch
+                                Edit
                             </button>
                         </td>
                     </tr>

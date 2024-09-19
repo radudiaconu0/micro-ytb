@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import router from "@/router"
-import { useCookies } from "@vueuse/integrations/useCookies"
 
 const LOGIN_MUTATION = gql`
     mutation login($email: String!, $password: String!) {
@@ -33,43 +32,29 @@ const CURRENT_USER_QUERY = gql`
     }
 `
 
-const REFRESH_TOKEN_MUTATION = gql`
-    mutation refreshToken {
-        refreshToken {
-            access_token
-            token_type
-            expires_in
-        }
-    }
-`
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(null)
     const isAuthenticated = ref(false)
-    const cookies = useCookies(['access_token'])
 
     const { mutate: loginMutation } = useMutation(LOGIN_MUTATION)
     const { mutate: logoutMutation } = useMutation(LOGOUT_MUTATION)
     const { refetch: refetchCurrentUser } = useQuery(CURRENT_USER_QUERY, null, { fetchPolicy: 'network-only' })
-    const { mutate: refreshTokenMutation } = useMutation(REFRESH_TOKEN_MUTATION)
 
     const login = async (credentials) => {
         try {
             const { data } = await loginMutation(credentials)
             if (data?.login?.access_token) {
-                cookies.set('access_token', data.login.access_token, {
-                    secure: true,
-                    sameSite: 'strict',
-                    expires: new Date(Date.now() + data.login.expires_in * 1000)
-                })
+                console.log('Login successful:', data)
+                localStorage.setItem('access_token', data.login.access_token)
                 isAuthenticated.value = true
                 await fetchCurrentUser()
             } else {
-                throw new Error('Login failed: No access token received')
+                alert('Login failed: No token received')
             }
         } catch (error) {
             console.error('Login error:', error)
-            throw new Error('Login failed: ' + (error.message || 'Unknown error'))
+            alert('Login failed: ' + error.message)
         }
     }
 
@@ -79,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (error) {
             console.error('Logout error:', error)
         } finally {
-            cookies.remove('access_token')
+            localStorage.removeItem('access_token')
             user.value = null
             isAuthenticated.value = false
             await router.push('/login')
@@ -96,33 +81,11 @@ export const useAuthStore = defineStore('auth', () => {
                 throw new Error('Failed to fetch user data')
             }
         } catch (error) {
-            console.error('Fetch user error:', error)
-            if (error.message.includes('Unauthorized')) {
-                await refreshToken()
-            } else {
-                await logout()
-            }
-        }
-    }
-
-    const refreshToken = async () => {
-        try {
-            const { data } = await refreshTokenMutation()
-            if (data?.refreshToken?.access_token) {
-                cookies.set('access_token', data.refreshToken.access_token, {
-                    secure: true,
-                    sameSite: 'strict',
-                    expires: new Date(Date.now() + data.refreshToken.expires_in * 1000)
-                })
-                await fetchCurrentUser()
-            } else {
-                throw new Error('Token refresh failed: No new token received')
-            }
-        } catch (error) {
-            console.error('Token refresh error:', error)
+            console.error('Fetch current user error:', error)
             await logout()
         }
     }
 
-    return { user, isAuthenticated, login, logout, fetchCurrentUser, refreshToken }
+
+    return { user, isAuthenticated, login, logout, fetchCurrentUser }
 })

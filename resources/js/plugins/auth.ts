@@ -1,29 +1,16 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
 import { provideApolloClient } from '@vue/apollo-composable'
-import router from "@/router"
 import { useAuthStore } from "@/stores/authStore"
-import { useCookies } from "@vueuse/integrations/useCookies"
+import {App} from "vue";
+
 
 const httpLink = createHttpLink({
-    uri: '/graphql'// Replace with your actual GraphQL endpoint
+    uri: '/graphql'
 })
 
 const authLink = setContext(async (_, { headers }) => {
-    const cookies = useCookies(['access_token'])
-    let token = cookies.get('access_token')
-
-    if (token && isTokenExpired(token)) {
-        const authStore = useAuthStore()
-        try {
-            await authStore.refreshToken()
-            token = cookies.get('access_token')
-        } catch (error) {
-            console.error('Error refreshing token:', error)
-            await authStore.logout()
-        }
-    }
-
+    let token = localStorage.getItem('access_token')
     return {
         headers: {
             ...headers,
@@ -38,35 +25,23 @@ export const apolloClient = new ApolloClient({
 })
 
 export default {
-    install: (app) => {
+    install: (app: App) => {
         provideApolloClient(apolloClient)
 
         const authStore = useAuthStore()
 
-        app.config.globalProperties.$auth = {
+        let auth = {
             login: authStore.login,
             logout: authStore.logout,
             fetchCurrentUser: authStore.fetchCurrentUser,
-            refreshToken: authStore.refreshToken,
         }
+        app.provide('auth', auth)
 
-        const cookies = useCookies(['access_token'])
-        if (cookies.get('access_token')) {
+        if (localStorage.getItem('access_token')) {
             authStore.fetchCurrentUser().catch(async (error) => {
                 console.error('Error fetching current user:', error)
                 await authStore.logout()
             })
         }
-    }
-}
-
-function isTokenExpired(token: string): boolean {
-    try {
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]))
-        // Add a 5-minute buffer to refresh the token before it actually expires
-        return (tokenPayload.exp * 1000) < (Date.now() + 5 * 60 * 1000)
-    } catch (error) {
-        console.error('Error parsing token:', error)
-        return true
     }
 }

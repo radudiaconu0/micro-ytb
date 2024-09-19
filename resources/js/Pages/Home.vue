@@ -10,15 +10,20 @@ const VIDEO_QUERY = gql`
    query GetVideos($first: Int!, $page: Int) {
     feedVideos(first: $first, page: $page) {
             data {
+            video_code,
                 url,
                 title,
                 description,
+                user {
+                    name
+                },
                 thumbnails {
                     thumbnail_url,
                     width,
                     height,
                     size
                 }
+                created_at
            }
         }
     }

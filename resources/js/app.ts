@@ -11,9 +11,10 @@ import auth from "@/plugins/auth";
 const pinia = createPinia()
 
 const app = createApp(App)
-    .use(router)
     .use(pinia)
     .use(auth)
+    .use(router)
+
 
 
 app.mount('#app');

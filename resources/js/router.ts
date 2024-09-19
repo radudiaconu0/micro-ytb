@@ -2,7 +2,6 @@ import {createMemoryHistory, createRouter, createWebHistory} from 'vue-router'
 
 import Home from "@/Pages/Home.vue";
 import Login from "@/Pages/Login.vue";
-import {useCookies} from "@vueuse/integrations/useCookies";
 
 const routes = [
     {path: '/', component: Home},
@@ -16,7 +15,7 @@ const routes = [
     {path: '/results', component: () => import('@/Pages/SearchResults.vue')},
     {path: '/watch', component: () => import('@/Pages/Video.vue')},
     {path: '/my-videos', component: () => import('@/Pages/MyVideos.vue'), meta: {auth: 'auth'}},
-    {path: '/video/:code/edit', component: () => import('@/Pages/MyVideos.vue'), meta: {auth: 'auth'}}
+    {path: '/video/:code/edit', component: () => import('@/Pages/EditVideo.vue'), meta: {auth: 'auth'}}
 ]
 
 const router = createRouter({
@@ -25,8 +24,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    const {get} = useCookies()
-    const user = get('access_token')
+    const user = localStorage.getItem('access_token')
     if (to.meta.auth === 'auth' && !user) {
         return next({path: '/login'})
     }

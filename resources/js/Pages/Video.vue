@@ -5,6 +5,7 @@ import {gql} from "graphql-tag";
 import {useLazyQuery} from "@vue/apollo-composable";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CommentSection from "@/Components/CommentSection.vue";
+import {formatDistanceToNow} from "date-fns";
 
 const route = useRoute();
 const video = ref(null);
@@ -25,7 +26,8 @@ const FETCH_VIDEO = gql`
             thumbnails {
                 thumbnail_url
             }
-            created_at
+            created_at,
+            video_code
         }
     }
 `;
@@ -60,7 +62,8 @@ watch(
         }
     },
     {immediate: true}
-);
+)
+
 
 </script>
 
@@ -94,7 +97,7 @@ watch(
                 <div class="p-4">
                     <h1 class="text-2xl font-bold mb-2 dark:text-white">{{ video.title }}</h1>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Uploaded by {{ video.user.name }} on {{ new Date(video.created_at).toLocaleDateString() }}
+                        Uploaded by {{ video.user.name }} • {{ formatDistanceToNow(new Date(video.created_at), {addSuffix: true}) }}
                     </p>
                 </div>
                 <div class="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -108,7 +111,5 @@ watch(
         <div v-else class="flex justify-center items-center min-h-screen">
             <div class="text-gray-700">No video to display.</div>
         </div>
-<!--        commentr sextion-->
-
     </GuestLayout>
 </template>

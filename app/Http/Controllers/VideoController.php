@@ -6,13 +6,9 @@ use App\Http\Requests\VideoRequest;
 use App\Jobs\ProcessVideoJob;
 use App\Models\Video;
 use App\Models\VideoThumbnail;
-use FFMpeg\FFProbe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Laravel\Facades\Image;
-use ProtoneMedia\LaravelFFMpeg\Filters\WatermarkFactory;
-use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 use Str;
 
 class VideoController extends Controller

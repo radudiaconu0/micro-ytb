@@ -1,31 +1,20 @@
 <script setup lang="ts">
-import {ref} from 'vue'
-import {useMutation} from '@vue/apollo-composable'
-import {LOGIN_MUTATION} from '@/gql/mutations'
-import {useRouter} from "vue-router";
-import {useCookies} from "@vueuse/integrations/useCookies";
 
-const email = ref('')
-const password = ref('')
-
-const {mutate: login, onDone, onError, loading} = useMutation(LOGIN_MUTATION)
-const router = useRouter()
-const handleSubmit = () => {
-    login({
-        email: email.value,
-        password: password.value
-    })
+import {inject} from "vue";
+import {useRoute, useRouter} from "vue-router";
+const router = useRouter();
+let auth = inject('auth');
+const handleSubmit = async  () => {
+    try {
+        await auth.login({
+            email: email.value,
+            password: password.value
+        })
+        await router.push('/');
+    } catch (e) {
+        console.log(e)
+    }
 }
-
-onDone((data) => {
-    console.log(data.data)
-    let cookie = useCookies(['access_token'])
-    cookie.set('access_token', data.data.login.access_token)
-    router.push('/')
-})
-onError((error) => {
-    console.log(error)
-})
 </script>
 <template>
     <section class="bg-gray-50 dark:bg-gray-900">

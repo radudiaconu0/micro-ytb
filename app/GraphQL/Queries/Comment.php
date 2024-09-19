@@ -15,7 +15,17 @@ class Comment
         if (!$video) {
             return response()->json(['message' => 'Video not found'], 404);
         }
-        return $video->comments()->paginate(10);
+        $comments =  $video->comments()->with('user')->whereCommentId(null)->paginate(10);
+        return [
+            'data' => $comments->items(),  // Items (video data) from pagination
+            'paginatorInfo' => [
+                'total' => $comments->total(),
+                'count' => $comments->count(),
+                'perPage' => $comments->perPage(),
+                'currentPage' => $comments->currentPage(),
+                'lastPage' => $comments->lastPage(),
+            ],
+        ];
     }
 
     public function replies($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
