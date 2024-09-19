@@ -1,0 +1,132 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Indicates what fields are available at the top level of a query operation."
+type Query {
+    "Find a single user by an identifying attribute."
+    user(
+        "Search by primary key."
+        id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+
+        "Search by email address."
+        email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
+    ): User @find
+
+    "List multiple users."
+    users(
+        "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
+        name: String @where(operator: "like")
+    ): [User!]! @paginate(defaultCount: 10)
+
+    me: User! @guard
+
+    "List all videos."
+    feedVideos(first: Int!, page: Int): VideoConnection!   @field(resolver: "VideoQueries@feedVideos")
+
+    "List all videos of the authenticated user."
+    myVideos(first: Int!, page: Int): VideoConnection! @field(resolver: "VideoQueries@myVideos") @guard
+
+    searchVideos(first: Int!, page: Int, query: String): VideoConnection! @field(resolver: "VideoQueries@searchVideos")
+    fetchVideo(video_code: String!): Video! @field(resolver: "VideoQueries@fetchVideo")
+
+    "List all comments of a video."
+    videoComments(video_code: String!, first: Int!, page: Int): CommentConnection! @field(resolver: "Comment@comments")
+    commentReplies(comment_id: ID!, first: Int!, page: Int): CommentConnection! @field(resolver: "Comment@replies")
+}
+
+
+type PaginatorInfo {
+    total: Int!
+    count: Int!
+    perPage: Int!
+    currentPage: Int!
+    lastPage: Int!
+}
+
+type VideoConnection {
+    data: [Video!]!
+    paginatorInfo: PaginatorInfo!
+}
+
+type Comment {
+    id: ID!
+    text: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+    user: User!
+    video: Video!
+    replies: [Comment]
+}
+
+type CommentConnection {
+    data: [Comment]
+    paginatorInfo: PaginatorInfo
+}
+
+
+type Thumbnail {
+    thumbnail_url: String!
+    width: Int!
+    height: Int!
+    size: String!
+}
+
+
+type Video {
+    id: ID!
+    title: String!
+    description: String
+    video_code: String!
+    url: String!
+    thumbnails : [Thumbnail]
+    status: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+    user: User!
+    comments: [Comment]
+}
+
+"Account of a person who utilizes this application."
+type User {
+    "Unique primary key."
+    id: ID!
+
+    "Non-unique name."
+    name: String!
+
+    "Unique email address."
+    email: String!
+
+    "When the email was verified."
+    email_verified_at: DateTime
+
+    "When the account was created."
+    created_at: DateTime!
+
+    "When the account was last updated."
+    updated_at: DateTime!
+}
+
+
+type Mutation {
+    login(email: String!, password: String!): AuthPayload! @field(resolver: "Login") @validator
+    register(name: String!, email: String!, password: String!, password_confirmation: String!): AuthPayload! @field(resolver: "Register") @validator
+    logout: Logout! @field(resolver: "Logout") @guard
+
+    createComment(video_code: String!, body: String!): Comment! @field(resolver: "Comment@createComment") @guard
+    createReply(comment_id: ID!, body: String!): Comment! @field(resolver: "Comment@createReply") @guard
+    deleteComment(comment_id: ID!): Comment! @field(resolver: "Comment@deleteComment") @guard
+    updateComment(comment_id: ID!, body: String!): Comment! @field(resolver: "Comment@updateComment") @guard
+}
+
+type AuthPayload {
+    access_token: String!
+    token_type: String!
+    expires_in: Int!
+}
+
+type Logout {
+    message: String!
+}
+
+
