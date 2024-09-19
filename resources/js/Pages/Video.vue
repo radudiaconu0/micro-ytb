@@ -4,11 +4,13 @@ import {useRoute} from "vue-router";
 import {gql} from "graphql-tag";
 import {useLazyQuery} from "@vue/apollo-composable";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
+import CommentSection from "@/Components/CommentSection.vue";
 
 const route = useRoute();
 const video = ref(null);
 const loading = ref(false);
 const error = ref(null);
+const videoCode = route.query.v;
 
 
 const FETCH_VIDEO = gql`
@@ -100,10 +102,13 @@ watch(
                     >{{ video.description }}</p>
                 </div>
             </div>
+            <CommentSection :video-code="videoCode"/>
         </div>
 
         <div v-else class="flex justify-center items-center min-h-screen">
             <div class="text-gray-700">No video to display.</div>
         </div>
+<!--        commentr sextion-->
+
     </GuestLayout>
 </template>

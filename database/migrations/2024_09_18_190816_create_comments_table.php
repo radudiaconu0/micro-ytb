@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('comment_id');
             $table->string('text');
-            $table->string('video_id');
+            $table->unsignedBigInteger('video_id');
             $table->timestamps();
             $table->softDeletes();
 

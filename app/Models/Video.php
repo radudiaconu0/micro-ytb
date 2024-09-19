@@ -71,4 +71,9 @@ class Video extends Model
     {
         return $this->status === 'processed';
     }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'video_id');
+    }
 }
