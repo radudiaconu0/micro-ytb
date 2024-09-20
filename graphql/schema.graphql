@@ -31,7 +31,6 @@ type Query {
 
     "List all comments of a video."
     videoComments(video_code: String!, first: Int!, page: Int): CommentConnection! @field(resolver: "Comment@comments")
-    commentReplies(comment_id: ID!, first: Int!, page: Int): CommentConnection! @field(resolver: "Comment@replies")
 }
 
 
@@ -55,7 +54,6 @@ type Comment {
     updated_at: DateTime!
     user: User!
     video: Video!
-    replies: [Comment]
 }
 
 type CommentConnection {

@@ -10,14 +10,12 @@ return new class extends Migration {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('comment_id');
             $table->string('text');
             $table->unsignedBigInteger('video_id');
             $table->timestamps();
             $table->softDeletes();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('comment_id')->references('id')->on('comments');
             $table->foreign('video_id')->references('id')->on('videos');
         });
     }

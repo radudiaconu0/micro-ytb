@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch, onMounted} from "vue";
+import {ref, watch, onMounted, computed} from "vue";
 import {useRoute} from "vue-router";
 import {gql} from "graphql-tag";
 import {useLazyQuery, useMutation} from "@vue/apollo-composable";
@@ -12,7 +12,7 @@ const route = useRoute();
 const video = ref(null);
 const loading = ref(false);
 const error = ref(null);
-const videoCode = route.query.v;
+const videoCode = computed(() => route.query.v);
 
 const INCREASE_VIEW_COUNT = gql`
     mutation IncreaseViewCount($video_code: String!) {
@@ -26,7 +26,7 @@ const INCREASE_VIEW_COUNT = gql`
 
 const cookies = useCookies(['viewed_videos']);
 const { mutate: incrementViewCount, onDone } = useMutation(INCREASE_VIEW_COUNT, {
-    video_code: videoCode
+    video_code: videoCode.value
 });
 
 const FETCH_VIDEO = gql`
@@ -49,7 +49,7 @@ const FETCH_VIDEO = gql`
 `;
 
 const {load: fetchVideoQuery, result} = useLazyQuery(FETCH_VIDEO, {
-    video_code: route.query.v
+    video_code: videoCode.value
 });
 
 const fetchVideo = async () => {
@@ -84,17 +84,17 @@ const viewCount = ref(0);
 
 onMounted(async () => {
     const viewedVideos = cookies.get('viewed_videos') || {};
-    const lastViewedTime = viewedVideos[videoCode] || 0;
+    const lastViewedTime = viewedVideos[videoCode.value] || 0;
     const currentTime = Date.now();
 
     if (currentTime - lastViewedTime > 60 * 10) {
         try {
-            await incrementViewCount({ video_code: videoCode });
+            await incrementViewCount({ video_code: videoCode.value });
         } catch (error) {
             console.error('Failed to increment view count:', error);
         }
 
-        viewedVideos[videoCode] = currentTime;
+        viewedVideos[videoCode.value] = currentTime;
         cookies.set('viewed_videos', viewedVideos, {
             expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
         });

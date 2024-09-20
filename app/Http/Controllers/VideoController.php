@@ -86,7 +86,7 @@ class VideoController extends Controller
                 Log::error('Failed to generate thumbnails: ' . $e->getMessage());
             }
 
-            ProcessVideoJob::dispatch($video);
+            ProcessVideoJob::dispatch($video)->onQueue('video-processing');
 
             return response()->json([
                 'success' => true,

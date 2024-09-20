@@ -1,11 +1,16 @@
+Improved Vue.js NavBar Component
+
 <script setup lang="ts">
-import {ref, onMounted, watch, watchEffect} from 'vue';
-import {useAuthStore} from "@/stores/authStore";
+import { ref, onMounted, watch, watchEffect } from 'vue';
+import { useAuthStore } from "@/stores/authStore";
 import debounce from 'lodash/debounce';
-import {useLazyQuery} from "@vue/apollo-composable";
+import { useLazyQuery } from "@vue/apollo-composable";
 import gql from "graphql-tag";
-import router from "@/router";
+import { useRoute, useRouter } from 'vue-router';
+
 const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 
 const user = ref(null);
 const isMenuOpen = ref(false);
@@ -19,12 +24,11 @@ watchEffect(() => {
 });
 
 const toggleDropDown = () => {
-    console.log(isDropDownOpen.value);
-    isDropDownOpen.value = !isDropDownOpen.value
-}
+    isDropDownOpen.value = !isDropDownOpen.value;
+};
 
 onMounted(() => {
-    user.value = useAuthStore().user;
+    user.value = authStore.user;
 });
 
 const toggleMenu = () => {
@@ -39,8 +43,8 @@ const SEARCH_VIDEO_QUERY = gql`
     query SearchVideos($search: String!) {
         searchVideos(first: 10, page: 1, query: $search) {
             data {
-            video_code,
-                url
+                video_code,
+                url,
                 title,
                 description,
                 thumbnails {
@@ -51,39 +55,50 @@ const SEARCH_VIDEO_QUERY = gql`
     }
 `;
 
-const {load: searchVideos, result} = useLazyQuery(SEARCH_VIDEO_QUERY, {
+const { load: searchVideos, result } = useLazyQuery(SEARCH_VIDEO_QUERY, {
     search: searchQuery
 });
 
-const search = async () => {
-    try {
-        await searchVideos();
-        console.log(result.value);
-        if (result.value && result.value.searchVideos.data) {
-            searchResults.value = result.value.searchVideos.data;
-            showResults.value = true;
-            console.log(searchResults.value);
+const search = debounce(async () => {
+    if (searchQuery.value.length > 2) {
+        try {
+            await searchVideos();
+            if (result.value && result.value.searchVideos.data) {
+                searchResults.value = result.value.searchVideos.data;
+                showResults.value = true;
+            }
+        } catch (e) {
+            console.error(e);
         }
-    } catch (e) {
-        console.error(e);
+    } else {
+        searchResults.value = [];
+        showResults.value = false;
     }
+}, 300);
+
+const selectResult = async (result) => {
+    const videoCode = result.video_code;
+    if (route.name === 'watch') {
+        await router.replace({ name: 'watch', query: { v: videoCode } });
+    } else {
+        await router.push({ name: 'watch', query: { v: videoCode } });
+    }
+    hideResults();
 };
 
-const selectResult = (result) => {
-    router.push(`/watch?v=${result.video_code}`);
+const goToSearchResults = async () => {
+    await router.push({ name: 'search', query: { search_query: searchQuery.value } });
+    hideResults();
 };
 
-const goToSearchResults = () => {
-    router.push(`/results?search_query=${searchQuery.value}`);
-};
 const logout = async () => {
     try {
-        await useAuthStore().logout()
+        await authStore.logout();
+        await router.push({ name: 'home' });
+    } catch (e) {
+        alert(e);
     }
-    catch (e) {
-        alert(e)
-    }
-}
+};
 </script>
 
 <template>

@@ -2,32 +2,28 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
     protected $fillable = [
         'user_id',
-        'comment_id',
         'text',
         'video_id',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function video()
+    public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
-    }
-
-    public function replies()
-    {
-        return $this->hasMany(Comment::class, 'comment_id');
     }
 }

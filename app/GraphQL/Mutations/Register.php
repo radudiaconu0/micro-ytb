@@ -3,32 +3,46 @@
 namespace App\GraphQL\Mutations;
 
 use App\Models\User;
+use GraphQL\Error\Error;
 
 class Register
 {
+    /**
+     * @throws \Exception
+     */
     public function __invoke($_, array $args)
     {
-        $user = new User();
-        $user->name = $args['name'];
-        $user->email = $args['email'];
-        $user->password = bcrypt($args['password']);
-        $user->save();
-        $creds = [
-            'email' => $args['email'],
-            'password' => $args['password']
-        ];
-        $token = auth()->attempt($creds);
+        try {
+            $user = User::create([
+                'name' => $args['name'],
+                'email' => $args['email'],
+                'password' => bcrypt($args['password']),
+            ]);
 
+            $credentials = [
+                'email' => $args['email'],
+                'password' => $args['password'],
+            ];
 
-        return $this->respondWithToken($token);
+            if (!$token = auth()->attempt($credentials)) {
+                \Log::warning('Failed register attempt for email: ' . $args['email']);
+                throw new Error('Error creating user.');
+            }
+
+            \Log::info('Successful login for email: ' . $args['email']);
+            return $this->respondWithToken($token);
+        } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            throw new Error('An error occurred during login: ' . $e->getMessage());
+        }
     }
 
-    protected function respondWithToken($token): \Illuminate\Http\JsonResponse
+    protected function respondWithToken($token): array
     {
-        return response()->json([
+        return [
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
-        ]);
+        ];
     }
 }
