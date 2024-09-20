@@ -1,25 +1,12 @@
 <script setup lang="ts">
 import {useQuery} from "@vue/apollo-composable";
 import {ref} from "vue";
-import gql from "graphql-tag";
-import GuestLayout from "@/Layouts/GuestLayout.vue";
+
+import {SEARCH_VIDEO_QUERY} from "@/gql/queries";
 
 const search = ref('');
 const videos = ref([]);
-const SEARCH_VIDEO_QUERY = gql`
-    query SearchVideos($search: String!) {
-        searchVideos(first: 10, page: 1, query: $search) {
-            data {
-                url
-                title,
-                description,
-                thumbnails {
-                    thumbnail_url
-                }
-            }
-        }
-    }
-`;
+
 
 const searchVideos = () => {
     const {data, loading, error, onResult, onError} = useQuery(SEARCH_VIDEO_QUERY, {

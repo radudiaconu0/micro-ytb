@@ -8,6 +8,7 @@ use App\Models\Video;
 use App\Models\VideoThumbnail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Laravel\Facades\Image;
 use Log;
 use Str;
@@ -139,30 +140,73 @@ class VideoController extends Controller
 
     public function updateVideo(Request $request)
     {
-        \Validator::make(
-            $request->all(),
-            [
+        try {
+            $validator = \Validator::make($request->all(), [
                 'video_code' => 'required|exists:videos,video_code',
-                'title' => 'required',
-                'description' => 'required',
-                'thumbnail_image' => 'image',
-            ]
-        )->validate();
-        $video = Video::whereVideoCode($request->video_code)->firstOrFail();
-        $video->description = $request->description;
-        $video->title = $request->title;
-        if ($request->has('thumbnail_image')) {
-            $thumbnails = $video->thumbnails;
-            foreach ($thumbnails as $thumbnail) {
-                Storage::disk('s3')->delete('thumbnails/' . $thumbnail->s3_key);
-                $thumbnail->delete();
+                'title' => 'required|max:255',
+                'description' => 'required|max:1000',
+                'thumbnail_image' => 'nullable|image|max:2048', // 2MB max
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
             }
-            $this->generateThumbnails($video, $request->file('thumbnail_image'));
+
+            $video = Video::whereVideoCode($request->video_code)->firstOrFail();
+
+            if ($video->user_id !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to update this video'
+                ], 403);
+            }
+
+            $video->description = $request->description;
+            $video->title = $request->title;
+
+            if ($request->hasFile('thumbnail_image')) {
+                $thumbnails = $video->thumbnails;
+                foreach ($thumbnails as $thumbnail) {
+                    // Check if file exists before attempting to delete
+                    if (Storage::disk('s3')->exists('thumbnails/' . $thumbnail->s3_key)) {
+                        Storage::disk('s3')->delete('thumbnails/' . $thumbnail->s3_key);
+                    }
+                    $thumbnail->delete();
+                }
+                $this->generateThumbnails($video, $request->file('thumbnail_image'));
+            }
+
+            $video->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Video updated successfully',
+                'data' => $video
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Video not found'
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error updating video: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the video'
+            ], 500);
         }
-        $video->save();
-        return response()->json([
-            'success' => true,
-        ]);
     }
 
     public function fetchVideo($videoCode)

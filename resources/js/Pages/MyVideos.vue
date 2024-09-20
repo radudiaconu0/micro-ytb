@@ -4,33 +4,9 @@ import {onMounted, ref, computed} from 'vue';
 import gql from 'graphql-tag';
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import {useRouter} from "vue-router";
+import {GET_VIDEOS} from "@/gql/queries.ts";
 
 const router = useRouter();
-const GET_VIDEOS = gql`
-  query GetVideos($page: Int!, $perPage: Int!) {
-    myVideos(page: $page, first: $perPage) {
-      data {
-        title
-        video_code
-        description
-        status
-        created_at
-        user {
-          name
-        }
-        thumbnails {
-          thumbnail_url
-        }
-      }
-      paginatorInfo {
-        currentPage
-        lastPage
-        total
-        perPage
-      }
-    }
-  }
-`;
 
 const videos = ref([]);
 const paginatorInfo = ref(null);

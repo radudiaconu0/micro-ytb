@@ -4,6 +4,8 @@ import {useMutation, useQuery} from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import {useAuthStore} from "../stores/authStore.ts";
 import {formatDistanceToNow} from "date-fns";
+import  {FETCH_COMMENTS} from "@/gql/queries.ts";
+import {DELETE_COMMENT, UPDATE_COMMENT, CREATE_COMMENT} from "@/gql/mutations.ts";
 
 const props = defineProps({
     videoCode: {
@@ -24,56 +26,9 @@ const editingComment = ref(null);
 const isDarkMode = ref(false);
 const observerTarget = ref(null);
 
-const FETCH_COMMENTS = gql`
-  query FetchComments($videoCode: String!, $page: Int!) {
-    videoComments(video_code: $videoCode, first: 10, page: $page) {
-      data {
-        id
-        text
-        created_at
-        user {
-          id
-          name
-        }
-      }
-      paginatorInfo {
-        currentPage
-        lastPage
-      }
-    }
-  }
-`;
 
-const CREATE_COMMENT = gql`
-  mutation CreateComment($videoCode: String!, $body: String!) {
-    createComment(video_code: $videoCode, body: $body) {
-      id
-      text
-      created_at
-      user {
-        id
-        name
-      }
-    }
-  }
-`;
 
-const DELETE_COMMENT = gql`
-  mutation DeleteComment($commentId: ID!) {
-    deleteComment(comment_id: $commentId) {
-      id
-    }
-  }
-`;
 
-const UPDATE_COMMENT = gql`
-  mutation UpdateComment($commentId: ID!, $body: String!) {
-    updateComment(comment_id: $commentId, body: $body) {
-      id
-      text
-    }
-  }
-`;
 
 
 
@@ -235,7 +190,7 @@ const cancelEdit = () => {
 
 
 const isCurrentUser = (userId) => {
-    return true;
+    return store.user && store.user.id === userId;
 };
 
 const formatDate = (date) => {

@@ -1,46 +1,18 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import NavBar from "@/Components/NavBar.vue";
+
 import GuestLayout from "@/Layouts/GuestLayout.vue";
-import gql from "graphql-tag";
 import { useQuery } from "@vue/apollo-composable";
 import VideoCard from "@/Components/VideoCard.vue";
 import LoadingSpinner from "@/Components/LoadingSpinner.vue";
+import {VIDEO_QUERY} from "@/gql/queries";
 
 const videos = ref([]);
 const page = ref(1);
 const loadingMore = ref(false);
 const hasMorePages = ref(true);
 
-const VIDEO_QUERY = gql`
-  query GetVideos($first: Int!, $page: Int) {
-    feedVideos(first: $first, page: $page) {
-      data {
-        video_code,
-        views,
-        url,
-        title,
-        description,
-        user {
-          name
-        },
-        thumbnails {
-          thumbnail_url,
-          width,
-          height,
-          size
-        },
-        created_at
-      },
-      paginatorInfo {
-        currentPage,
-        lastPage,
-        total,
-        perPage
-      }
-    }
-  }
-`;
+
 
 const { result, loading, error, fetchMore } = useQuery(VIDEO_QUERY, {
     first: 10,

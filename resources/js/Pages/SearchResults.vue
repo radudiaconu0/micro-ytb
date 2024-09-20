@@ -6,6 +6,7 @@ import gql from "graphql-tag";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import LoadingSpinner from "@/Components/LoadingSpinner.vue";
 import {formatDistanceToNow} from "date-fns";
+import {SEARCH_VIDEO_QUERY} from "@/gql/queries";
 
 const route = useRoute();
 const query = ref(route.query.search_query as string);
@@ -16,23 +17,7 @@ watch(() => route.query.search_query, (newQuery) => {
 
 
 const videos = ref([]);
-const SEARCH_VIDEO_QUERY = gql`
-    query SearchVideos($search: String!) {
-        searchVideos(first: 10, page: 1, query: $search) {
-            data {
-                video_code,
-                views
-                url
-                title,
-                description,
-                thumbnails {
-                    thumbnail_url
-                }
-                created_at
-            }
-        }
-    }
-`;
+
 const {load: fetchData, loading, result, onResult, onError} = useLazyQuery(SEARCH_VIDEO_QUERY, {
     search: query.value
 })

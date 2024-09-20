@@ -3,34 +3,9 @@ import { defineStore } from 'pinia'
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import router from "@/router"
+import {LOGIN_MUTATION, LOGOUT_MUTATION} from "@/gql/mutations";
+import {CURRENT_USER_QUERY} from "@/gql/queries";
 
-const LOGIN_MUTATION = gql`
-    mutation login($email: String!, $password: String!) {
-        login(email: $email, password: $password) {
-            access_token
-            token_type
-            expires_in
-        }
-    }
-`
-
-const LOGOUT_MUTATION = gql`
-    mutation Logout {
-        logout {
-            message
-        }
-    }
-`
-
-const CURRENT_USER_QUERY = gql`
-    query {
-        me {
-            id
-            name
-            email
-        }
-    }
-`
 
 
 export const useAuthStore = defineStore('auth', () => {

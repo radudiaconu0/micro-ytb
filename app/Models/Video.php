@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -78,9 +77,5 @@ class Video extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'video_id');
-    }
-    public function getCreatedAtAttribute($value)
-    {
-        return Carbon::parse($value)->setTimezone(config('app.display_timezone'))->format('Y-m-d H:i:s');
     }
 }

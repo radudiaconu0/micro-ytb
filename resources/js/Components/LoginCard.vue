@@ -44,7 +44,7 @@ const handleSubmit = () => {
             </button>
 
             <p class="text-sm text-gray-400">
-                Not registered? <a href="#" class="text-blue-500 hover:underline">Create account</a>
+                Not registered? <a href="/register" class="text-blue-500 hover:underline">Create account</a>
             </p>
         </form>
     </div>

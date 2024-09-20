@@ -32,9 +32,4 @@ class VideoThumbnail extends Model
             'size' => $this->size,
         ];
     }
-
-    public function getCreatedAtAttribute($value)
-    {
-        return Carbon::parse($value)->setTimezone(config('app.display_timezone'))->format('Y-m-d H:i:s');
-    }
 }

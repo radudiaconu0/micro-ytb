@@ -7,6 +7,7 @@ import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CommentSection from "@/Components/CommentSection.vue";
 import {formatDistanceToNow} from "date-fns";
 import {useCookies} from "@vueuse/integrations/useCookies";
+import {FETCH_VIDEO} from "@/gql/queries.ts";
 
 const route = useRoute();
 const video = ref(null);
@@ -29,24 +30,7 @@ const { mutate: incrementViewCount, onDone } = useMutation(INCREASE_VIEW_COUNT, 
     video_code: videoCode.value
 });
 
-const FETCH_VIDEO = gql`
-    query FetchVideo($video_code: String!) {
-        fetchVideo(video_code: $video_code) {
-            url
-            title
-            views
-            description
-            user {
-                name
-            }
-            thumbnails {
-                thumbnail_url
-            }
-            created_at,
-            video_code
-        }
-    }
-`;
+
 
 const {load: fetchVideoQuery, result} = useLazyQuery(FETCH_VIDEO, {
     video_code: videoCode.value

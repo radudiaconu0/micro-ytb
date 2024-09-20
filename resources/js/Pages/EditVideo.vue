@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import axios from "axios";
 import Btn from "@/Components/Btn.vue";
-import {useRoute, useRouter} from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +19,13 @@ const form = ref({
     thumbnail: null as File | null,
     frameSelector: 0,
     thumbnailOption: 'current',
+})
+
+const errors = ref({
+    title: '',
+    description: '',
+    thumbnail_image: '',
+    general: ''
 })
 
 const currentFrame = ref<HTMLCanvasElement | null>(null)
@@ -49,22 +56,15 @@ const onFrameSelectorChange = () => {
 
 const handleSubmit = async () => {
     loading.value = true
+    errors.value = { title: '', description: '', thumbnail_image: '', general: '' }
+
     const formData = new FormData()
     formData.append('title', form.value.title)
     formData.append('description', form.value.description)
     formData.append('video_code', videoCode as string)
-    formData.append('video_code', form.value.video_code)
-
-    console.log('Thumbnail option:', form.value.thumbnailOption)
-    console.log('Thumbnail file:', form.value.thumbnail)
 
     if (form.value.thumbnailOption !== 'current' && form.value.thumbnail) {
         formData.append('thumbnail_image', form.value.thumbnail, 'thumbnail.jpg')
-        console.log('Appending thumbnail to form data')
-    }
-
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value)
     }
 
     try {
@@ -74,15 +74,32 @@ const handleSubmit = async () => {
                 'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         })
-        console.log('Video updated successfully:', response.data)
-    } catch (error) {
-        console.error('Error updating video:', error)
-        if (axios.isAxiosError(error) && error.response) {
-            console.error('Response data:', error.response.data)
-            console.error('Response status:', error.response.status)
-            console.error('Response headers:', error.response.headers)
+        if (response.data.success) {
+            alert(response.data.message)
+            await router.push('/my-videos')
+        } else {
+            errors.value.general = response.data.message || 'An error occurred'
         }
-        await router.push('/my-videos')
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            if (error.response.status === 422) {
+                const validationErrors = error.response.data.errors
+                for (const field in validationErrors) {
+                    if (field in errors.value) {
+                        errors.value[field] = validationErrors[field].join(', ')
+                    }
+                }
+            } else if (error.response.status === 403) {
+                errors.value.general = 'You do not have permission to update this video'
+            } else if (error.response.status === 404) {
+                errors.value.general = 'Video not found'
+            } else {
+                errors.value.general = error.response.data.message || 'An error occurred'
+            }
+        } else {
+            errors.value.general = 'An unexpected error occurred'
+        }
+        console.error('Error updating video:', error)
     } finally {
         loading.value = false
     }
@@ -108,9 +125,9 @@ const fetchVideoDetails = async () => {
         form.value.description = video.value.description
     } catch (error) {
         console.error('Error fetching video details:', error)
+        errors.value.general = 'Failed to fetch video details. Please try again.'
     }
 }
-
 watch(() => form.value.thumbnailOption, (newValue) => {
     if (newValue === 'frame') {
         form.value.frameSelector = 0
@@ -155,8 +172,7 @@ onMounted(async () => {
                             </div>
                             <div class="card bg-white dark:bg-gray-800 shadow-md rounded-lg mt-4">
                                 <div class="card-body p-4">
-                                    <h3 class="card-title text-lg font-bold mb-2 text-gray-900 dark:text-white">Video
-                                        Metadata</h3>
+                                    <h3 class="card-title text-lg font-bold mb-2 text-gray-900 dark:text-white">Video Metadata</h3>
                                     <div v-if="video" class="space-y-2">
                                         <p class="text-sm text-gray-500 dark:text-gray-400">Duration: {{ video.metadata.duration }}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">Resolution: {{ video.metadata.width }}x{{ video.metadata.height }}</p>
@@ -169,17 +185,16 @@ onMounted(async () => {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                         <div class="w-full md:w-1/2">
                             <form @submit.prevent="handleSubmit" class="space-y-4">
                                 <div>
                                     <label for="title"
-                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Video
-                                        Title</label>
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Video Title</label>
                                     <input type="text" id="title" v-model="form.title"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            placeholder="Enter video title" required>
+                                    <div v-if="errors.title" class="text-red-500 text-sm mt-1">{{ errors.title }}</div>
                                 </div>
                                 <div>
                                     <label for="description"
@@ -187,20 +202,19 @@ onMounted(async () => {
                                     <textarea id="description" v-model="form.description" rows="4"
                                               class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                               placeholder="Write your video description here"></textarea>
+                                    <div v-if="errors.description" class="text-red-500 text-sm mt-1">{{ errors.description }}</div>
                                 </div>
                                 <div>
                                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thumbnail</label>
                                     <div class="flex items-center mb-2">
                                         <input type="radio" id="current_thumbnail" v-model="form.thumbnailOption"
                                                value="current" class="mr-2">
-                                        <label for="current_thumbnail" class="text-sm text-gray-900 dark:text-white">Keep
-                                            current thumbnail</label>
+                                        <label for="current_thumbnail" class="text-sm text-gray-900 dark:text-white">Keep current thumbnail</label>
                                     </div>
                                     <div class="flex items-center mb-2">
                                         <input type="radio" id="custom_thumbnail" v-model="form.thumbnailOption"
                                                value="custom" class="mr-2">
-                                        <label for="custom_thumbnail" class="text-sm text-gray-900 dark:text-white">Upload
-                                            custom thumbnail</label>
+                                        <label for="custom_thumbnail" class="text-sm text-gray-900 dark:text-white">Upload custom thumbnail</label>
                                     </div>
                                     <div v-if="form.thumbnailOption === 'custom'">
                                         <input @change="handleThumbnailUpload"
@@ -210,8 +224,7 @@ onMounted(async () => {
                                     <div class="flex items-center mb-2">
                                         <input type="radio" id="video_frame" v-model="form.thumbnailOption"
                                                value="frame" class="mr-2">
-                                        <label for="video_frame" class="text-sm text-gray-900 dark:text-white">Select
-                                            frame from video</label>
+                                        <label for="video_frame" class="text-sm text-gray-900 dark:text-white">Select frame from video</label>
                                     </div>
                                     <div v-if="form.thumbnailOption === 'frame'">
                                         <input @input="onFrameSelectorChange" type="range" v-model="form.frameSelector"
@@ -219,8 +232,8 @@ onMounted(async () => {
                                         <canvas ref="currentFrame"
                                                 class="w-full h-auto rounded-lg bg-gray-100 dark:bg-gray-700"></canvas>
                                     </div>
+                                    <div v-if="errors.thumbnail_image" class="text-red-500 text-sm mt-1">{{ errors.thumbnail_image }}</div>
                                 </div>
-
                                 <Btn color="blue" :loading="loading">Update Video</Btn>
                             </form>
                         </div>

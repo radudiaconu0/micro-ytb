@@ -4,10 +4,12 @@ import GuestLayout from "@/Layouts/GuestLayout.vue";
 import axios from "axios";
 import { useCookies } from "@vueuse/integrations/useCookies";
 import Btn from "@/Components/Btn.vue";
+import {useRouter} from "vue-router";
 
 const loading = ref(false)
 const errors = ref<Record<string, string[]>>({})
 const successMessage = ref('')
+const router = useRouter()
 
 const form = ref({
     title: '',
@@ -59,45 +61,49 @@ const handleFileUpload = (e: Event) => {
 
 const handleSubmit = async () => {
     loading.value = true
-    errors.value = {}
-    successMessage.value = ''
     const formData = new FormData()
     formData.append('title', form.value.title)
     formData.append('description', form.value.description)
-    if (form.value.video) formData.append('video_file', form.value.video)
-    if (form.value.thumbnailOption === 'custom' && form.value.thumbnail) {
-        formData.append('thumbnail_image', form.value.thumbnail)
-    }
-    formData.append('watermark_type', form.value.watermarkType)
-    if (form.value.watermarkType === 'image' && form.value.watermarkImage) {
-        formData.append('watermark_image', form.value.watermarkImage)
-    } else if (form.value.watermarkType === 'text') {
-        formData.append('watermark_text', form.value.watermarkText)
-    }
-    formData.append('watermark_position', form.value.watermarkPosition)
+    formData.append('video_code', videoCode as string)
 
-    const cookies = useCookies(['access_token'])
+    if (form.value.thumbnailOption !== 'current' && form.value.thumbnail) {
+        formData.append('thumbnail_image', form.value.thumbnail, 'thumbnail.jpg')
+    }
+
     try {
-        const response = await axios.post('/api/store-video', formData, {
+        const response = await axios.post('/api/videos/update', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         })
-        successMessage.value = response.data.message || 'Video uploaded successfully! It is now being processed.'
-    } catch (error: any) {
-        if (error.response) {
-            if (error.response.status === 422) {
-                errors.value = error.response.data.errors
-            } else {
-                errors.value = { general: ['An error occurred while uploading the video. Please try again.'] }
-            }
-        } else if (error.request) {
-            errors.value = { general: ['No response received from the server. Please check your connection and try again.'] }
+        if (response.data.success) {
+            alert(response.data.message)
+            await router.push('/my-videos')
         } else {
-            errors.value = { general: ['An unexpected error occurred. Please try again.'] }
+            alert(response.data.message || 'An error occurred')
         }
-        console.error('Error details:', error)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            if (error.response.status === 422) {
+                // Validation error
+                const errors = error.response.data.errors
+                let errorMessage = 'Validation failed:\n'
+                for (const field in errors) {
+                    errorMessage += `${field}: ${errors[field].join(', ')}\n`
+                }
+                alert(errorMessage)
+            } else if (error.response.status === 403) {
+                alert('You do not have permission to update this video')
+            } else if (error.response.status === 404) {
+                alert('Video not found')
+            } else {
+                alert(error.response.data.message || 'An error occurred')
+            }
+        } else {
+            alert('An unexpected error occurred')
+        }
+        console.error('Error updating video:', error)
     } finally {
         loading.value = false
     }
@@ -127,7 +133,7 @@ watch(() => form.value.video, (newVideo) => {
 <template>
     <GuestLayout>
         <div class="container mx-auto p-4">
-            <div class="card bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+            <div class="card bg-white dark:bg-zinc-800 shadow-xl rounded-lg overflow-hidden">
                 <div class="card-body p-6">
                     <h2 class="card-title text-2xl font-bold mb-6 text-gray-900 dark:text-white">Video Upload</h2>
 
@@ -149,7 +155,7 @@ watch(() => form.value.video, (newVideo) => {
                                 <div>
                                     <label for="title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Video Title</label>
                                     <input type="text" id="title" v-model="form.title"
-                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           class="bg-zing-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-zing-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            placeholder="Enter video title" required>
                                     <p v-if="errors.title" class="mt-1 text-sm text-red-600">{{ errors.title[0] }}</p>
                                 </div>
@@ -158,7 +164,7 @@ watch(() => form.value.video, (newVideo) => {
                                 <div>
                                     <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
                                     <textarea id="description" v-model="form.description" rows="4"
-                                              class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                              class="block p-2.5 w-full text-sm text-gray-900 bg-zing-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-zing-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                               placeholder="Write your video description here"></textarea>
                                     <p v-if="errors.description" class="mt-1 text-sm text-red-600">{{ errors.description[0] }}</p>
                                 </div>
@@ -167,7 +173,7 @@ watch(() => form.value.video, (newVideo) => {
                                 <div>
                                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="video_upload">Upload video</label>
                                     <input @change="handleFileUpload"
-                                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-zing-50 dark:text-gray-400 focus:outline-none dark:bg-zing-700 dark:border-gray-600 dark:placeholder-gray-400"
                                            id="video_upload" type="file" accept="video/*">
                                     <p v-if="errors.video_file" class="mt-1 text-sm text-red-600">{{ errors.video_file[0] }}</p>
                                 </div>
@@ -182,7 +188,7 @@ watch(() => form.value.video, (newVideo) => {
                                     </div>
                                     <div v-if="form.thumbnailOption === 'custom'">
                                         <input @change="handleThumbnailUpload"
-                                               class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                               class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-zing-50 dark:text-gray-400 focus:outline-none dark:bg-zing-700 dark:border-gray-600 dark:placeholder-gray-400"
                                                type="file" accept="image/*">
                                     </div>
                                     <div class="flex items-center mb-2">
@@ -193,9 +199,9 @@ watch(() => form.value.video, (newVideo) => {
                                     <div v-if="form.thumbnailOption === 'frame'">
                                         <input @input="onFrameSelectorChange" type="range" v-model="form.frameSelector"
                                                min="0" max="100" step="1"
-                                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                                               class="w-full h-2 bg-zing-200 rounded-lg appearance-none cursor-pointer dark:bg-zing-700">
                                         <canvas ref="currentFrame" width="320" height="180"
-                                                class="mt-2 w-full h-auto rounded-lg bg-gray-100 dark:bg-gray-700"></canvas>
+                                                class="mt-2 w-full h-auto rounded-lg bg-zing-100 dark:bg-zing-700"></canvas>
                                     </div>
                                     <p v-if="errors.thumbnail_image" class="mt-1 text-sm text-red-600">{{ errors.thumbnail_image[0] }}</p>
                                 </div>
@@ -210,7 +216,7 @@ watch(() => form.value.video, (newVideo) => {
                                     </div>
                                     <div v-if="form.watermarkType === 'image'">
                                         <input @change="handleWatermarkUpload"
-                                               class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                               class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-zing-50 dark:text-gray-400 focus:outline-none dark:bg-zing-700 dark:border-gray-600 dark:placeholder-gray-400"
                                                type="file" accept="image/*">
                                     </div>
                                     <div class="flex items-center mb-2">
@@ -220,7 +226,7 @@ watch(() => form.value.video, (newVideo) => {
                                     </div>
                                     <div v-if="form.watermarkType === 'text'">
                                         <input type="text" v-model="form.watermarkText"
-                                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                               class="bg-zing-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-zing-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                                placeholder="Enter watermark text">
                                     </div>
                                     <div class="mt-2">
@@ -248,7 +254,7 @@ watch(() => form.value.video, (newVideo) => {
                                        class="rounded-lg w-full h-full object-cover"></video>
                             </div>
                             <div v-else
-                                 class="flex items-center justify-center h-64 bg-gray-100 rounded-lg dark:bg-gray-700">
+                                 class="flex items-center justify-center h-64 bg-zing-100 rounded-lg dark:bg-zing-700">
                                 <p class="text-gray-500 dark:text-gray-400">Video preview will appear here</p>
                             </div>
                         </div>
