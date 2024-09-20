@@ -2,12 +2,13 @@
 
 namespace App\GraphQL\Mutations;
 
+use App\Models\User;
+
 class Register
 {
     public function __invoke($_, array $args)
     {
-        \Log::info($args);
-        $user = new \App\Models\User();
+        $user = new User();
         $user->name = $args['name'];
         $user->email = $args['email'];
         $user->password = bcrypt($args['password']);

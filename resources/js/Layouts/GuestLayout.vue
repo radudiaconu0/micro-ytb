@@ -2,7 +2,6 @@
     <div class="flex flex-col h-screen bg-white dark:bg-zinc-900">
         <NavBar/>
 
-        <!-- Page Content -->
         <main class="flex-grow dark:bg-zinc-900">
             <slot/>
         </main>

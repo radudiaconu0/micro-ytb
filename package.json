@@ -17,6 +17,8 @@
     },
     "dependencies": {
         "@apollo/client": "^3.11.8",
+        "@dicebear/collection": "^9.2.2",
+        "@dicebear/core": "^9.2.2",
         "@ffmpeg/ffmpeg": "^0.12.10",
         "@ffmpeg/types": "^0.12.2",
         "@ffmpeg/util": "^0.12.1",

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import GuestLayout from "@/Layouts/GuestLayout.vue";
+
 </script>
 
 <template>

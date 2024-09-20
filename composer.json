@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "3.0",
         "meilisearch/meilisearch-php": "^1.10",
+        "mll-lab/graphql-php-scalars": "^6.3",
         "mll-lab/laravel-graphiql": "^3.2",
         "nuwave/lighthouse": "^6.44",
         "pbmedia/laravel-ffmpeg": "^8.5",

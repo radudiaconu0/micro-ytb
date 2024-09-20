@@ -13,6 +13,7 @@ class VideoQueries
     public function feedVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): array
     {
         $videos = Video::with('user', 'thumbnails')
+            ->whereStatus('processed')
             ->latest()
             ->paginate($args['first'], ['*'], 'page', $args['page'] ?? 1);
         $videos->getCollection()->transform(function (Video $video) {

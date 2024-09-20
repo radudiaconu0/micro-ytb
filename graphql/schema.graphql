@@ -71,6 +71,18 @@ type Thumbnail {
     size: String!
 }
 
+type VideoMetadata {
+    duration: Float!
+    bit_rate: Int!
+    format_name: String!
+    width: Int
+    height: Int
+    codec_name: String
+    frame_rate: Float
+    audio_codec: String
+    audio_channels: Int
+    audio_sample_rate: Int
+}
 
 type Video {
     id: ID!
@@ -78,6 +90,8 @@ type Video {
     description: String
     video_code: String!
     url: String!
+    views: Int!
+    metadata: VideoMetadata
     thumbnails : [Thumbnail]
     status: String!
     created_at: DateTime!
@@ -117,6 +131,8 @@ type Mutation {
     createReply(comment_id: ID!, body: String!): Comment! @field(resolver: "Comment@createReply") @guard
     deleteComment(comment_id: ID!): Comment! @field(resolver: "Comment@deleteComment") @guard
     updateComment(comment_id: ID!, body: String!): Comment! @field(resolver: "Comment@updateComment") @guard
+
+    incrementViewCount(video_code: String!): ViewCountResponse! @field(resolver: "Video@incrementViews")
 }
 
 type AuthPayload {
@@ -129,4 +145,10 @@ type Logout {
     message: String!
 }
 
+
+type ViewCountResponse {
+    success: Boolean!
+    message: String!
+    views_count: Int!
+}
 

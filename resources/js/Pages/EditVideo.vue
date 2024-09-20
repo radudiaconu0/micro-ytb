@@ -145,7 +145,7 @@ onMounted(async () => {
                         <!-- Left side: Video preview -->
                         <div class="w-full md:w-1/2">
                             <div v-if="video" class="aspect-w-16 aspect-h-9">
-                                <video :src="video.url" :poster="video.thumbnails[0].thumbnail_url"
+                                <video :src="video.url" :poster="video.thumbnails[2].thumbnail_url"
                                        controls class="rounded-lg w-full h-full object-cover"
                                        ref="videoFile"></video>
                             </div>
@@ -153,6 +153,23 @@ onMounted(async () => {
                                  class="flex items-center justify-center h-full bg-gray-100 rounded-lg dark:bg-gray-700">
                                 <p class="text-gray-500 dark:text-gray-400">Video preview will appear here</p>
                             </div>
+                            <div class="card bg-white dark:bg-gray-800 shadow-md rounded-lg mt-4">
+                                <div class="card-body p-4">
+                                    <h3 class="card-title text-lg font-bold mb-2 text-gray-900 dark:text-white">Video
+                                        Metadata</h3>
+                                    <div v-if="video" class="space-y-2">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Duration: {{ video.metadata.duration }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Resolution: {{ video.metadata.width }}x{{ video.metadata.height }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Frame Rate: {{ video.metadata.frame_rate }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Bitrate: {{ video.metadata.bit_rate }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Video Codec: {{ video.metadata.codec_name }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Audio Codec: {{ video.metadata.audio_codec }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Audio Channels: {{ video.metadata.audio_channels }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Audio Sample Rate: {{ video.metadata.audio_sample_rate }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="w-full md:w-1/2">
                             <form @submit.prevent="handleSubmit" class="space-y-4">

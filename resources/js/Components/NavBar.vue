@@ -1,17 +1,27 @@
 <script setup lang="ts">
-import {ref, onMounted, watch} from 'vue';
+import {ref, onMounted, watch, watchEffect} from 'vue';
 import {useAuthStore} from "@/stores/authStore";
 import debounce from 'lodash/debounce';
 import {useLazyQuery} from "@vue/apollo-composable";
 import gql from "graphql-tag";
 import router from "@/router";
-
+const authStore = useAuthStore();
 
 const user = ref(null);
 const isMenuOpen = ref(false);
 const searchQuery = ref('');
 const searchResults = ref([]);
 const showResults = ref(false);
+const isDropDownOpen = ref(false);
+
+watchEffect(() => {
+    user.value = authStore.user;
+});
+
+const toggleDropDown = () => {
+    console.log(isDropDownOpen.value);
+    isDropDownOpen.value = !isDropDownOpen.value
+}
 
 onMounted(() => {
     user.value = useAuthStore().user;
@@ -66,6 +76,14 @@ const selectResult = (result) => {
 const goToSearchResults = () => {
     router.push(`/results?search_query=${searchQuery.value}`);
 };
+const logout = async () => {
+    try {
+        await useAuthStore().logout()
+    }
+    catch (e) {
+        alert(e)
+    }
+}
 </script>
 
 <template>
@@ -122,18 +140,20 @@ const goToSearchResults = () => {
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button class="p-2 rounded-full text-gray-400 hover:bg-gray-800 focus:outline-none">
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                <div class="relative">
+                    <button @click="toggleDropDown"
+                            class="flex items-center justify-between w-full py-2 px-3 text-white rounded hover:bg-gray-700 md:hover:bg-transparent md:border-0 md:hover:text-blue-500 md:p-0 md:w-auto">
+                        {{ user?.name }}
+                        <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                         </svg>
                     </button>
-                    <button v-if="user"
-                            class="ml-4 flex items-center justify-center h-8 w-8 rounded-full bg-red-500 text-white font-bold text-sm focus:outline-none">
-                        {{ user.name.charAt(0) }}
-                    </button>
+                    <div v-if="isDropDownOpen"
+                         class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-[#212121] py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <a href="/my-videos" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">My Videos</a>
+                        <a href="/video-upload" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">Upload a video</a>
+                        <a @click="logout" href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">Sign out</a>
+                    </div>
                 </div>
             </div>
         </div>

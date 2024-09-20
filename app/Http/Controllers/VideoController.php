@@ -9,6 +9,7 @@ use App\Models\VideoThumbnail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
+use Log;
 use Str;
 
 class VideoController extends Controller
@@ -20,60 +21,85 @@ class VideoController extends Controller
 
     public function store(VideoRequest $request)
     {
+        try {
+            $video = new Video();
+            $video->user_id = auth()->id();
+            $video->title = $request->title;
+            $video->description = $request->description;
 
-        $video = new Video();
+            $watermarkType = $request->watermark_type;
+            $watermarkPosition = $request->watermark_position;
+            $watermarkText = $request->watermark_text;
 
+            $videoCode = Str::random(11);
+            $video->video_code = $videoCode;
 
-        $video->user_id = auth()->id();
+            if (!$request->hasFile('video_file') || !$request->file('video_file')->isValid()) {
+                return response()->json(['errors' => ['video_file' => ['The video file is invalid or missing.']]], 422);
+            }
 
-        $video->title = $request->title;
-        $video->description = $request->description;
+            $fileName = Str::uuid()->toString() . '_' . time() . '.' . $request->file('video_file')->getClientOriginalExtension();
+            $s3Key = $fileName;
 
-        $watermark = $request->file('watermark_image');
-        $watermarkType = $request->watermark_type;
-        $watermarkPosition = $request->watermark_position;
-        $watermarkText = $request->watermark_text;
+            if ($watermarkType === 'image') {
+                if (!$request->hasFile('watermark_image') || !$request->file('watermark_image')->isValid()) {
+                    return response()->json(['errors' => ['watermark_image' => ['The watermark image is invalid or missing.']]], 422);
+                }
 
-        $videoCode = Str::random(11);
-        $video->video_code = $videoCode;
-        $fileName = Str::uuid()->toString() . '_' . time() . '.' . $request->file('video_file')->getClientOriginalExtension();
-        $s3Key = $fileName;
+                $watermark = $request->file('watermark_image');
+                $watermarkFileName = Str::uuid()->toString() . '_' . time() . '.' . $watermark->getClientOriginalExtension();
+                $watermarkS3Key = $watermarkFileName;
 
-        if ($watermarkType === 'image') {
-            $watermarkFileName = Str::uuid()->toString() . '_' . time() . '.' . $watermark->getClientOriginalExtension();
-            $watermarkS3Key = $watermarkFileName;
-            Storage::disk('s3')->putFileAs(
-                'watermarks',
-                $watermark,
-                $watermarkFileName
-            );
-            $video->watermark_type = $watermarkType;
-            $video->watermark_content = $watermarkS3Key;
+                try {
+                    Storage::disk('s3')->putFileAs('watermarks', $watermark, $watermarkFileName);
+                } catch (\Exception $e) {
+                    Log::error('Failed to upload watermark image: ' . $e->getMessage());
+                    return response()->json(['errors' => ['watermark_image' => ['Failed to upload watermark image.']]], 500);
+                }
+
+                $video->watermark_type = $watermarkType;
+                $video->watermark_content = $watermarkS3Key;
+            } elseif ($watermarkType === 'text') {
+                if (empty($watermarkText)) {
+                    return response()->json(['errors' => ['watermark_text' => ['Watermark text is required when using text watermark.']]], 422);
+                }
+                $video->watermark_type = $watermarkType;
+                $video->watermark_content = $watermarkText;
+            }
+
+            $video->watermark_position = $watermarkPosition;
+
+            try {
+                Storage::disk('s3')->putFileAs('videos/original', $request->file('video_file'), $fileName);
+            } catch (\Exception $e) {
+                Log::error('Failed to upload video file: ' . $e->getMessage());
+                return response()->json(['errors' => ['video_file' => ['Failed to upload video file.']]], 500);
+            }
+
+            $video->original_s3_key = $s3Key;
+            $video->status = 'processing';
+            $video->save();
+
+            try {
+                $this->generateThumbnails($video, $request->file('thumbnail_image'));
+            } catch (\Exception $e) {
+                Log::error('Failed to generate thumbnails: ' . $e->getMessage());
+            }
+
+            ProcessVideoJob::dispatch($video);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Video uploaded successfully and is now being processed.',
+                'video_code' => $video->video_code
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Video upload failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while processing your video.',
+            ], 500);
         }
-
-        if ($watermarkType === 'text') {
-            $video->watermark_type = $watermarkType;
-            $video->watermark_content = $watermarkText;
-        }
-
-        $video->watermark_position = $watermarkPosition;
-
-
-        Storage::disk('s3')->putFileAs(
-            'videos/original',
-            $request->file('video_file'),
-            $fileName
-        );
-
-        $video->original_s3_key = $s3Key;
-        $video->status = 'processing';
-        $video->save();
-        $this->generateThumbnails($video, $request->file('thumbnail_image'));
-
-        ProcessVideoJob::dispatch($video);
-        return response()->json([
-            'success' => true,
-        ]);
     }
 
     public function generateThumbnails($video, $thumbnailFile)

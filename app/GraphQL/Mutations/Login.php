@@ -15,16 +15,20 @@ class Login
      */
     public function __invoke($_, array $args)
     {
-        $credentials = [
-            'email' => $args['email'],
-            'password' => $args['password'],
-        ];
+        try {
+            $credentials = [
+                'email' => $args['email'],
+                'password' => $args['password'],
+            ];
 
-        if (!$token = auth()->attempt($credentials)) {
-            throw new Error('Credentials are invalid.');
+            if (!$token = auth()->attempt($credentials)) {
+                throw new Error('Invalid email or password.');
+            }
+
+            return $this->respondWithToken($token);
+        } catch (\Exception $e) {
+            throw new Error('An error occurred during login. Please try again.');
         }
-
-        return $this->respondWithToken($token);
     }
 
     protected function respondWithToken($token): array

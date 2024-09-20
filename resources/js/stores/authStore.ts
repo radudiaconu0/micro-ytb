@@ -45,16 +45,15 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const { data } = await loginMutation(credentials)
             if (data?.login?.access_token) {
-                console.log('Login successful:', data)
                 localStorage.setItem('access_token', data.login.access_token)
                 isAuthenticated.value = true
                 await fetchCurrentUser()
             } else {
-                alert('Login failed: No token received')
+                throw new Error('Login failed: No token received')
             }
         } catch (error) {
             console.error('Login error:', error)
-            alert('Login failed: ' + error.message)
+            throw error
         }
     }
 
@@ -83,9 +82,9 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (error) {
             console.error('Fetch current user error:', error)
             await logout()
+            throw error
         }
     }
-
 
     return { user, isAuthenticated, login, logout, fetchCurrentUser }
 })

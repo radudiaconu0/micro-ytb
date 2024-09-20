@@ -2,10 +2,11 @@
 import {ref, watch, onMounted} from "vue";
 import {useRoute} from "vue-router";
 import {gql} from "graphql-tag";
-import {useLazyQuery} from "@vue/apollo-composable";
+import {useLazyQuery, useMutation} from "@vue/apollo-composable";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CommentSection from "@/Components/CommentSection.vue";
 import {formatDistanceToNow} from "date-fns";
+import {useCookies} from "@vueuse/integrations/useCookies";
 
 const route = useRoute();
 const video = ref(null);
@@ -13,12 +14,27 @@ const loading = ref(false);
 const error = ref(null);
 const videoCode = route.query.v;
 
+const INCREASE_VIEW_COUNT = gql`
+    mutation IncreaseViewCount($video_code: String!) {
+        incrementViewCount(video_code: $video_code) {
+            success,
+            message,
+            views_count
+        }
+    }
+`;
+
+const cookies = useCookies(['viewed_videos']);
+const { mutate: incrementViewCount, onDone } = useMutation(INCREASE_VIEW_COUNT, {
+    video_code: videoCode
+});
 
 const FETCH_VIDEO = gql`
     query FetchVideo($video_code: String!) {
         fetchVideo(video_code: $video_code) {
             url
             title
+            views
             description
             user {
                 name
@@ -64,6 +80,33 @@ watch(
     {immediate: true}
 )
 
+const viewCount = ref(0);
+
+onMounted(async () => {
+    const viewedVideos = cookies.get('viewed_videos') || {};
+    const lastViewedTime = viewedVideos[videoCode] || 0;
+    const currentTime = Date.now();
+
+    if (currentTime - lastViewedTime > 60 * 10) {
+        try {
+            await incrementViewCount({ video_code: videoCode });
+        } catch (error) {
+            console.error('Failed to increment view count:', error);
+        }
+
+        viewedVideos[videoCode] = currentTime;
+        cookies.set('viewed_videos', viewedVideos, {
+            expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        });
+    }
+});
+
+onDone((result) => {
+    if (result.data?.incrementViewCount?.success) {
+        viewCount.value = result.data.incrementViewCount.views_count;
+    }
+});
+
 
 </script>
 
@@ -97,7 +140,7 @@ watch(
                 <div class="p-4">
                     <h1 class="text-2xl font-bold mb-2 dark:text-white">{{ video.title }}</h1>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Uploaded by {{ video.user.name }} • {{ formatDistanceToNow(new Date(video.created_at), {addSuffix: true}) }}
+                        {{ video.user.name }} • {{ video.views }} views • {{ formatDistanceToNow(new Date(video.created_at)) }} ago
                     </p>
                 </div>
                 <div class="p-4 border-t border-gray-200 dark:border-gray-700">

@@ -11,6 +11,7 @@ const VIDEO_QUERY = gql`
     feedVideos(first: $first, page: $page) {
             data {
             video_code,
+            views
                 url,
                 title,
                 description,
@@ -40,16 +41,14 @@ onResult((result) => {
 </script>
 
 <template>
-<GuestLayout>
-<!--    youtube like flex box-->
-
-    <div class="flex flex-wrap gap-4">
-        <VideoCard v-for="video in videos" :key="video.url" :video="video"/>
-    </div>
-
-</GuestLayout>
+    <GuestLayout>
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <VideoCard v-for="video in videos" :key="video.video_code" :video="video" />
+            </div>
+        </div>
+    </GuestLayout>
 </template>
-
 <style scoped>
 
 </style>
