@@ -15,7 +15,7 @@ class Comment
         if (!$video) {
             return response()->json(['message' => 'Video not found'], 404);
         }
-        $comments =  $video->comments()->with('user')->whereCommentId(null)->paginate(10);
+        $comments =  $video->comments()->with('user')->paginate(10);
         return [
             'data' => $comments->items(),  // Items (video data) from pagination
             'paginatorInfo' => [
@@ -27,14 +27,4 @@ class Comment
             ],
         ];
     }
-
-    public function replies($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
-    {
-        $comment = \App\Models\Comment::find($args['comment_id']);
-        if (!$comment) {
-            return response()->json(['message' => 'Comment not found'], 404);
-        }
-        return $comment->replies()->paginate(10);
-    }
-
 }

@@ -4,8 +4,9 @@ import Home from "@/Pages/Home.vue";
 import Login from "@/Pages/Login.vue";
 
 const routes: Readonly<RouteRecordRaw[]> = [
-    {path: '/', component: Home},
+    {name: 'home', path: '/', component: Home},
     {
+        name: 'login',
         path: '/login', component: Login, meta: {
             auth: 'guest'
         }

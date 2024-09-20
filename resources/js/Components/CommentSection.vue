@@ -75,43 +75,11 @@ const UPDATE_COMMENT = gql`
   }
 `;
 
-const CREATE_REPLY = gql`
-  mutation CreateReply($commentId: ID!, $body: String!) {
-    createReply(comment_id: $commentId, body: $body) {
-      id
-      text
-      created_at
-      user {
-        id
-        name
-      }
-    }
-  }
-`;
 
-const FETCH_REPLIES = gql`
-  query FetchReplies($commentId: ID!, $page: Int!) {
-    commentReplies(comment_id: $commentId, first: 5, page: $page) {
-      data {
-        id
-        text
-        created_at
-        user {
-          id
-          name
-        }
-      }
-      paginatorInfo {
-        lastPage
-      }
-    }
-  }
-`;
 
 const {mutate: createCommentMutation} = useMutation(CREATE_COMMENT);
 const {mutate: deleteCommentMutation} = useMutation(DELETE_COMMENT);
 const {mutate: updateCommentMutation} = useMutation(UPDATE_COMMENT);
-const {mutate: createReplyMutation} = useMutation(CREATE_REPLY);
 
 let fetchComments;
 
@@ -282,7 +250,7 @@ const distanceToNow = (date) => {
 <template>
     <div :class="['comment-section', { 'dark': isDarkMode }]">
         <div class="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-lg">
-            <div class="mb-6">
+            <div class="mb-6" v-if="store.user">
                 <textarea v-model="newCommentBody" placeholder="Write a comment..."
                           class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"></textarea>
                 <button @click="submitComment"

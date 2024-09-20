@@ -27,7 +27,7 @@ const handleSubmit = () => {
 
 onDone((result) => {
     localStorage.setItem('access_token', result.data.register.access_token)
-    router.visit('/')
+    router.push('/')
 })
 
 onError((error) => {

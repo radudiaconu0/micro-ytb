@@ -94,7 +94,7 @@ const goToSearchResults = async () => {
 const logout = async () => {
     try {
         await authStore.logout();
-        await router.push({ name: 'home' });
+        await router.push({ name: 'login' });
     } catch (e) {
         alert(e);
     }
@@ -155,7 +155,7 @@ const logout = async () => {
                         </div>
                     </div>
                 </div>
-                <div class="relative">
+                <div class="relative" v-if="user">
                     <button @click="toggleDropDown"
                             class="flex items-center justify-between w-full py-2 px-3 text-white rounded hover:bg-gray-700 md:hover:bg-transparent md:border-0 md:hover:text-blue-500 md:p-0 md:w-auto">
                         {{ user?.name }}
@@ -169,6 +169,12 @@ const logout = async () => {
                         <a href="/video-upload" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">Upload a video</a>
                         <a @click="logout" href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">Sign out</a>
                     </div>
+                </div>
+                <div v-else>
+                    <a href="/login"
+                       class="text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium">Sign in</a>
+                    <a href="/register"
+                       class="text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium">Sign up</a>
                 </div>
             </div>
         </div>
