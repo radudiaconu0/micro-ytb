@@ -155,7 +155,7 @@ onMounted(async () => {
 <template>
     <GuestLayout>
         <div class="container mx-auto p-4">
-            <div class="card bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+            <div class="card bg-white dark:bg-zinc-800 shadow-xl rounded-lg overflow-hidden">
                 <div class="card-body p-6">
                     <h2 class="card-title text-2xl font-bold mb-6 text-gray-900 dark:text-white">Edit Video</h2>
                     <div class="flex flex-col md:flex-row gap-6">
@@ -167,10 +167,10 @@ onMounted(async () => {
                                        ref="videoFile"></video>
                             </div>
                             <div v-else
-                                 class="flex items-center justify-center h-full bg-gray-100 rounded-lg dark:bg-gray-700">
+                                 class="flex items-center justify-center h-full bg-gray-100 rounded-lg dark:bg-zinc-800">
                                 <p class="text-gray-500 dark:text-gray-400">Video preview will appear here</p>
                             </div>
-                            <div class="card bg-white dark:bg-gray-800 shadow-md rounded-lg mt-4">
+                            <div class="card bg-white dark:bg-zinc-800 shadow-md rounded-lg mt-4">
                                 <div class="card-body p-4">
                                     <h3 class="card-title text-lg font-bold mb-2 text-gray-900 dark:text-white">Video Metadata</h3>
                                     <div v-if="video" class="space-y-2">

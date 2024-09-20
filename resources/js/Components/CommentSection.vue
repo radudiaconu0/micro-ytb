@@ -1,10 +1,10 @@
-<script setup>
-import {onMounted, ref, watchEffect} from 'vue';
+<script setup lang="ts">
+import {ref, onMounted, watchEffect} from 'vue';
 import {useMutation, useQuery} from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-import {useAuthStore} from "../stores/authStore.ts";
+import {useAuthStore} from "@/stores/authStore";
 import {formatDistanceToNow} from "date-fns";
-import  {FETCH_COMMENTS} from "@/gql/queries.ts";
+import {FETCH_COMMENTS} from "@/gql/queries.ts";
 import {DELETE_COMMENT, UPDATE_COMMENT, CREATE_COMMENT} from "@/gql/mutations.ts";
 
 const props = defineProps({
@@ -25,12 +25,7 @@ const newCommentBody = ref("");
 const editingComment = ref(null);
 const isDarkMode = ref(false);
 const observerTarget = ref(null);
-
-
-
-
-
-
+const errorMessage = ref("");
 
 const {mutate: createCommentMutation} = useMutation(CREATE_COMMENT);
 const {mutate: deleteCommentMutation} = useMutation(DELETE_COMMENT);
@@ -59,10 +54,8 @@ const setupCommentsFetching = () => {
                 newComments.forEach(newComment => {
                     const existingIndex = comments.value.findIndex(c => c.id === newComment.id);
                     if (existingIndex !== -1) {
-
                         comments.value[existingIndex] = newComment;
                     } else {
-
                         comments.value.push(newComment);
                     }
                 });
@@ -124,29 +117,28 @@ const setupInfiniteScroll = () => {
 };
 
 const submitComment = async () => {
-    if (!newCommentBody.value.toString().trim()) return;
-    console.log('Submitting comment with:', {
-        videoCode: props.videoCode,
-        body: newCommentBody.value
-    });
+    if (!newCommentBody.value.toString().trim()) {
+        errorMessage.value = "Comment body cannot be empty.";
+        return;
+    }
+
+    errorMessage.value = "";
 
     try {
         const {data} = await createCommentMutation({
             videoCode: props.videoCode,
             body: newCommentBody.value
         });
-        console.log('Comment created:', data);
 
         if (data && data.createComment) {
             comments.value.unshift(data.createComment);
             newCommentBody.value = "";
         } else {
-            console.error('No data returned from createComment mutation:', data);
-            error.value = 'Failed to create comment';
+            errorMessage.value = 'Failed to create comment. Please try again.';
         }
     } catch (e) {
         console.error('Error creating comment:', e);
-        error.value = 'Failed to create comment';
+        errorMessage.value = e.graphQLErrors?.[0]?.message || 'Failed to create comment. Please try again.';
     }
 };
 
@@ -155,12 +147,10 @@ const deleteComment = async (commentId) => {
         await deleteCommentMutation({
             commentId: commentId
         });
-        console.log('Comment deleted:', commentId);
-        console.log('Before:', comments.value);
         comments.value = comments.value.filter(c => c.id !== commentId);
     } catch (e) {
         console.error('Error deleting comment:', e);
-        error.value = 'Failed to delete comment';
+        errorMessage.value = e.graphQLErrors?.[0]?.message || 'Failed to delete comment. Please try again.';
     }
 };
 
@@ -170,24 +160,38 @@ const editComment = (comment) => {
 
 const updateComment = async () => {
     if (!editingComment.value) return;
+
+    if (!editingComment.value.text.trim()) {
+        errorMessage.value = "Comment body cannot be empty.";
+        return;
+    }
+
+    errorMessage.value = "";
+
     try {
         const {data} = await updateCommentMutation({
             commentId: editingComment.value.id,
             body: editingComment.value.text
         });
-        console.log('Comment updated:', data.updateComment);
-        editingComment.value = null;
+
+        if (data && data.updateComment) {
+            const index = comments.value.findIndex(c => c.id === editingComment.value.id);
+            if (index !== -1) {
+                comments.value[index] = data.updateComment;
+            }
+            editingComment.value = null;
+        } else {
+            errorMessage.value = 'Failed to update comment. Please try again.';
+        }
     } catch (e) {
         console.error('Error updating comment:', e);
-        error.value = 'Failed to update comment';
+        errorMessage.value = e.graphQLErrors?.[0]?.message || 'Failed to update comment. Please try again.';
     }
 };
 
 const cancelEdit = () => {
     editingComment.value = null;
 };
-
-
 
 const isCurrentUser = (userId) => {
     return store.user && store.user.id === userId;
@@ -200,25 +204,31 @@ const formatDate = (date) => {
 const distanceToNow = (date) => {
     return formatDistanceToNow(new Date(date), {addSuffix: true});
 };
-
 </script>
+
 <template>
     <div :class="['comment-section', { 'dark': isDarkMode }]">
         <div class="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-lg">
+            <div v-if="errorMessage" class="mb-4 text-red-500 bg-red-100 border border-red-400 p-2 rounded">
+                {{ errorMessage }}
+            </div>
             <div class="mb-6" v-if="store.user">
-                <textarea v-model="newCommentBody" placeholder="Write a comment..."
-                          class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"></textarea>
-                <button @click="submitComment"
-                        class="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
+        <textarea
+            v-model="newCommentBody"
+            placeholder="Write a comment..."
+            class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
+        ></textarea>
+                <button
+                    @click="submitComment"
+                    class="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+                >
                     Submit Comment
                 </button>
             </div>
             <div v-if="loading && comments.length === 0" class="text-center text-gray-600 dark:text-gray-400">
-                <svg class="animate-spin h-8 w-8 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Loading comments...
             </div>
@@ -236,11 +246,19 @@ const distanceToNow = (date) => {
                             <span>{{ distanceToNow(comment.created_at) }}</span>
                         </div>
                         <div class="flex space-x-2 mb-2">
-                            <button v-if="isCurrentUser(comment.user.id)" @click="editComment(comment)"
-                                    class="text-blue-500 hover:text-blue-600 transition duration-300">Edit
+                            <button
+                                v-if="isCurrentUser(comment.user.id)"
+                                @click="editComment(comment)"
+                                class="text-blue-500 hover:text-blue-600 transition duration-300"
+                            >
+                                Edit
                             </button>
-                            <button v-if="isCurrentUser(comment.user.id)" @click="deleteComment(comment.id)"
-                                    class="text-red-500 hover:text-red-600 transition duration-300">Delete
+                            <button
+                                v-if="isCurrentUser(comment.user.id)"
+                                @click="deleteComment(comment.id)"
+                                class="text-red-500 hover:text-red-600 transition duration-300"
+                            >
+                                Delete
                             </button>
                         </div>
                     </div>
@@ -251,20 +269,25 @@ const distanceToNow = (date) => {
                     </div>
                 </div>
             </div>
-
         </div>
         <div v-if="editingComment" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div class="bg-white dark:bg-zinc-800 p-6 rounded-lg shadow-xl max-w-lg w-full">
                 <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Edit Comment</h3>
-                <textarea v-model="editingComment.text"
-                          class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 dark:text-white mb-4"></textarea>
+                <textarea
+                    v-model="editingComment.text"
+                    class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 dark:text-white mb-4"
+                ></textarea>
                 <div class="flex justify-end space-x-2">
-                    <button @click="cancelEdit"
-                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-300">
+                    <button
+                        @click="cancelEdit"
+                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-300"
+                    >
                         Cancel
                     </button>
-                    <button @click="updateComment"
-                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                    <button
+                        @click="updateComment"
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                    >
                         Update
                     </button>
                 </div>

@@ -148,7 +148,14 @@ const logout = async () => {
                                     <li v-for="result in searchResults" :key="result.url"
                                         @mousedown="selectResult(result)"
                                         class="px-4 py-2 hover:bg-[#3f3f3f] cursor-pointer text-white">
-                                        {{ result.title }}
+                                        <div class="flex items-center">
+                                            <img :src="result.thumbnails[0].thumbnail_url" alt="thumbnail"
+                                                 class="w-12 h-8 object-cover rounded"/>
+                                            <div class="ml-2">
+                                                <p class="text-sm font-medium">{{ result.title }}</p>
+                                                <p class="text-xs text-gray-400">{{ result.description }}</p>
+                                            </div>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>
