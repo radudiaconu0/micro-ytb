@@ -84,6 +84,8 @@ DB_DATABASE=your_database_name
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
+APP_DISPLAY_TIMEZONE=UTC
+
 MINIO_ENDPOINT=http://127.0.0.1:9000
 MINIO_KEY=your_minio_key
 MINIO_SECRET=your_minio_secret
