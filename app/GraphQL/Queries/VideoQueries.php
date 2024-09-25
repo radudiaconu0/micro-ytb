@@ -56,7 +56,7 @@ class VideoQueries
 
     public function searchVideos($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo)
     {
-        $videos = Video::search($args['query'])
+        $videos = Video::search($args['query'])->where('status', 'processed')
             ->paginate(10);
 
         $videos->getCollection()->transform(function (Video $video) {
